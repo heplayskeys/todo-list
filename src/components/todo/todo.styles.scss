@@ -1,0 +1,12 @@
+.todo-container {
+  display: flex;
+  //   justify-content: center;
+
+  .complete {
+    text-decoration: line-through;
+  }
+
+  .delete-todo {
+    margin-left: 5px;
+  }
+}
