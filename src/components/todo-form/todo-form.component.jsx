@@ -1,14 +1,21 @@
 import React from "react";
 import shortid from "shortid";
 
+import "./todo-form.styles.scss";
+
 class TodoForm extends React.Component {
-  state = {
-    text: ""
-  };
+  constructor() {
+    super();
+
+    this.state = {
+      text: ""
+    };
+  }
 
   handleChange = event => {
+    const { name, value } = event.target;
     this.setState({
-      [event.target.name]: event.target.value
+      [name]: value
     });
   };
 
@@ -32,16 +39,22 @@ class TodoForm extends React.Component {
 
   render() {
     return (
-      <div className="todo-input">
-        <form onSubmit={this.handleSubmit}>
+      <div className="todo-form">
+        <form className="form-container" onSubmit={this.handleSubmit}>
           <input
             type="text"
             name="text"
             value={this.state.text}
             onChange={this.handleChange}
-            placeholder="Todo HERE"
+            placeholder="Enter Your ToDos Here"
+            className="form-control"
           />
-          <button onClick={this.handleSubmit}>Add Todo</button>
+          <button
+            className="add-todo-btn btn btn-dark"
+            onClick={this.handleSubmit}
+          >
+            Add ToDo
+          </button>
         </form>
       </div>
     );

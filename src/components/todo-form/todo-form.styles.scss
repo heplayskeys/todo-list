@@ -1,0 +1,17 @@
+.todo-form {
+  width: 850px;
+  margin: 20px auto;
+
+  .form-container {
+    display: flex;
+    justify-content: space-evenly;
+  }
+
+  .form-control {
+    width: 80%;
+  }
+
+  .add-todo-btn {
+    width: 12%;
+  }
+}
