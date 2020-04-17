@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useHistory } from 'react-router-dom';
-// import { connect } from 'react-redux';
+import { connect } from 'react-redux';
 // import { createStructuredSelector } from 'reselect';
 
 import { auth } from '../../firebase/firebase.utils';
@@ -54,5 +54,8 @@ const Header = ({ currentUser }) => {
 //   currentUser: selectCurrentUser,
 // });
 
-// export default connect(mapStateToProps)(Header);
-export default Header;
+const mapStateToProps = ({ user }) => ({
+	currentUser: user.currentUser
+});
+
+export default connect(mapStateToProps)(Header);
