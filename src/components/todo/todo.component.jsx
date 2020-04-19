@@ -1,37 +1,39 @@
-import React from "react";
-import "./todo.styles.scss";
+import React from 'react';
+import './todo.styles.scss';
 
 const Todo = props => {
-  const {
-    todo: { id, text, complete },
-    toggleComplete,
-    deleteTodo
-  } = props;
+	const {
+		todo: { id, text, complete },
+		toggleComplete,
+		deleteTodo
+	} = props;
 
-  return (
-    <div className="todo-container input-group mb-3">
-      <div className="input-group-prepend">
-        <div className="input-group-text">
-          <input
-            id={id}
-            type="checkbox"
-            checked={complete}
-            onChange={toggleComplete}
-          />
-        </div>
-      </div>
-      <div
-        type="text"
-        className={`todo-item form-control ${complete ? "complete" : ""}`}
-        onClick={toggleComplete}
-      >
-        {text}
-      </div>
-      <button className="delete-todo badge badge-danger" onClick={deleteTodo}>
-        X
-      </button>
-    </div>
-  );
+	return (
+		<div className='todo-container input-group mb-3'>
+			<div className='input-group-prepend'>
+				<div className='input-group-text'>
+					<input
+						id={id}
+						type='checkbox'
+						checked={complete}
+						onChange={toggleComplete}
+						className='checkbox-round'
+					/>
+					<label className='box-label' htmlFor='checkbox'></label>
+				</div>
+			</div>
+			<div
+				type='text'
+				className={`todo-item form-control ${complete ? 'complete' : ''}`}
+				onClick={toggleComplete}
+			>
+				{text}
+			</div>
+			<button className='delete-todo badge badge-danger' onClick={deleteTodo}>
+				X
+			</button>
+		</div>
+	);
 };
 
 export default Todo;

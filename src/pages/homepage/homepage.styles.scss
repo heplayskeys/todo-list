@@ -1,0 +1,22 @@
+.homepage-container {
+	display: flex;
+	justify-content: center;
+	flex-direction: column;
+
+	.homepage-title {
+		text-align: left;
+		font-weight: bold;
+		font-size: 4em;
+		list-style: none;
+	}
+
+	.homepage-image {
+		background-image: url('https://image.freepik.com/free-vector/list-concept_1325-59.jpg');
+		background-size: cover;
+		width: 50vh;
+		height: 50vh;
+		border-radius: 50%;
+		border: 1px solid rgba(211, 211, 211, 0.329);
+		margin: 50px auto;
+	}
+}

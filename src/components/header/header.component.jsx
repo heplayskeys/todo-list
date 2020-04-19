@@ -25,12 +25,19 @@ const Header = ({ currentUser }) => {
 	};
 
 	return (
-		<div className='header navbar navbar-dark bg-dark'>
+		<div className='header navbar navbar-light'>
 			<Link to='/' className='nav-title'>
 				<h1>Cloud ToDo</h1>
 			</Link>
 			<div className='options'>
-				<Link className='option' to='/'>
+				<Link
+					className='option'
+					to={
+						currentUser
+							? `/user/${currentUser.userID}/todo-lists`
+							: '/todo-list'
+					}
+				>
 					<Option>TODO LISTS</Option>
 				</Link>
 				<Link className='option' to='/contact'>

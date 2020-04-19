@@ -1,14 +1,28 @@
 .sign-in {
-    width: 380px;
-    display: flex;
-    flex-direction: column;
+	display: flex;
+	flex-direction: column;
+	width: 400px;
+	height: 650px;
+	background: #fff;
+	border-radius: 3%;
+	padding: 25px;
+	border: 1px solid #e9ecef;
 
-    .title {
-        margin: 10px 0;
-    }
+	.title {
+		margin: 10px 0;
+	}
 
-    .buttons {
-        display: flex;
-        justify-content: space-between;
-    }
+	.buttons {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		margin: 0 auto;
+
+		.sign-in-btn,
+		.google-sign-in-btn {
+			display: flex;
+			justify-content: center;
+			margin: 10px 0;
+		}
+	}
 }

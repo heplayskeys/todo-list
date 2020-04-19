@@ -1,29 +1,29 @@
 .todo-container {
-  display: flex;
-  justify-content: center;
+	display: flex;
+	justify-content: center;
 
-  .todo-item {
-    &:hover {
-      cursor: pointer;
-      background-color: #f8f9fa;
-    }
-  }
+	.todo-item {
+		&:hover {
+			cursor: pointer;
+			background-color: #f8f9fa;
+		}
+	}
 
-  .complete {
-    text-decoration: line-through;
-    background-color: #f8f9fa;
-    color: #c7c7c7;
-  }
+	.complete {
+		text-decoration: line-through;
+		background-color: #f8f9fa;
+		color: #c7c7c7;
+	}
 
-  .delete-todo {
-    margin-left: 5px;
-    width: 5%;
-    background-color: #fff;
-    color: #343a40;
+	.delete-todo {
+		margin-left: 5px;
+		width: 5%;
+		background-color: #fff;
+		color: #343a40;
 
-    &:hover {
-      background-color: #dc3545;
-      color: #fff;
-    }
-  }
+		&:hover {
+			background-color: #dc3545;
+			color: #fff;
+		}
+	}
 }

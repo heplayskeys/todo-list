@@ -42,24 +42,26 @@ class App extends React.Component {
 			<div>
 				<Header />
 				<Switch>
-					<Route exact path='/' component={TodoListPage} />
 					<Route
 						exact
 						path='/signin'
 						render={() =>
 							this.props.currentUser ? (
-								<Redirect to={`/user/${this.props.currentUser.userID}`} />
+								<Redirect
+									to={`/user/${this.props.currentUser.userID}/todo-lists`}
+								/>
 							) : (
 								<SignInAndSignUpPage />
 							)
 						}
 					/>
-					<Route exact path='/user/:userID' component={UserLists} />
+					<Route exact path='/user/:userID/todo-lists' component={UserLists} />
 					<Route
 						exact
-						path='/todo-lists/:todoListID'
+						path='/user/:userID/todo-lists/:todoListID'
 						component={TodoListPage}
 					/>
+					<Route path='/' component={TodoListPage} />
 					/>
 				</Switch>
 			</div>
