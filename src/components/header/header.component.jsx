@@ -6,8 +6,6 @@ import { connect } from 'react-redux';
 import { auth } from '../../firebase/firebase.utils';
 // import { selectCurrentUser } from '../../redux/user/user.selectors';
 
-// import { ReactComponent as Logo } from '../../assets/crown.svg';
-
 import styled from 'styled-components';
 import './header.styles.scss';
 

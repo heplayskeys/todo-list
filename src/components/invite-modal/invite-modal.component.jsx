@@ -29,7 +29,8 @@ class InviteModal extends React.Component {
 		const { value } = event.target;
 
 		this.setState({
-			inviteEmail: value
+			inviteEmail: value,
+			emailError: false
 		});
 	};
 
@@ -84,7 +85,7 @@ class InviteModal extends React.Component {
 
 	dbInviteUser = async userEmail => {
 		const {
-			currentUser: { displayName },
+			currentUser: { userID, displayName },
 			todoListID,
 			handleInvite
 		} = this.props;
@@ -93,40 +94,45 @@ class InviteModal extends React.Component {
 			[todoListID]: displayName
 		};
 
-		let newInviteIDs = [];
-		let invitedUserID = '';
+		const currentUserInviteData = {};
 
 		try {
-			await firestore
-				.collection('users')
-				.where('email', '==', userEmail)
-				.get()
-				.then(docs =>
-					docs.forEach(doc => {
-						const { inviteIDs } = doc.data();
+			const updateRef = firestore.collection('users');
+			const updateSnapshot = await updateRef.get();
+			updateSnapshot.docs.forEach(doc => {
+				if (doc.data().email === userEmail) {
+					if (Object.keys(doc.data().inviteIDs).includes(todoListID)) {
+						console.log('User has already been invited to this list.');
+						handleInvite('error');
+						return;
+					} else {
+						currentUserInviteData[todoListID] = doc.data().displayName;
 
-						if (Object.keys(inviteIDs).includes(todoListID)) {
-							console.log('User has already been invited to this list.');
-							handleInvite('error');
-							return;
-						} else {
-							newInviteIDs = { ...inviteData, ...doc.data().inviteIDs };
-							invitedUserID = doc.id;
+						updateRef.doc(doc.id).update({
+							inviteIDs: { ...inviteData, ...doc.data().inviteIDs }
+						});
+						handleInvite('success');
+					}
 
-							firestore.doc(`users/${invitedUserID}`).update({
-								inviteIDs: newInviteIDs
-							});
-							handleInvite('success');
-						}
-
-						setTimeout(() => {
-							handleInvite(null);
-						}, 5000);
-					})
-				);
+					setTimeout(() => {
+						handleInvite(null);
+					}, 5000);
+					return;
+				}
+			});
 		} catch (error) {
 			handleInvite(null);
 			console.error('ERROR: Unable to invite user. Email not found.');
+		}
+
+		try {
+			const currentUserData = firestore.doc(`users/${userID}`);
+			console.log(currentUserData);
+			// await currentUserData.update({
+			// 	invitesSent: {...currentUserInviteData,
+			// });
+		} catch (error) {
+			console.log('ERROR: Unable to update sent invites.');
 		}
 	};
 
@@ -210,3 +216,40 @@ const mapStateToProps = ({ user }) => ({
 });
 
 export default connect(mapStateToProps)(InviteModal);
+
+// .filter(doc => doc.data().email === userEmail)[0]
+// .data();
+
+// .where('email', '==', userEmail)
+// .get()
+// .then(docs =>
+// 	docs.forEach(doc => {
+// 		const { inviteIDs } = doc.data();
+
+// 		if (Object.keys(inviteIDs).includes(todoListID)) {
+// 			console.log('User has already been invited to this list.');
+// 			handleInvite('error');
+// 			return;
+// 		} else {
+// 			newInviteIDs = { ...inviteData, ...doc.data().inviteIDs };
+// 			invitedUserID = doc.id;
+
+// 			firestore.doc(`users/${invitedUserID}`).update({
+// 				inviteIDs: newInviteIDs
+// 			});
+// 			handleInvite('success');
+
+// 			let currentUserInviteData = {
+// 				[todoListID]: doc.data().userID
+// 			};
+
+// 			firestore.doc(`users/${userID}`).update({
+// 				invitesSent: currentUserInviteData
+// 			});
+// 		}
+
+// 		setTimeout(() => {
+// 			handleInvite(null);
+// 		}, 5000);
+// 	})
+// );

@@ -36,7 +36,11 @@ class UserLists extends React.Component {
 					Object.keys(this.props.currentUser.inviteIDs).includes(list.id)
 			);
 
+			userLists.sort((list1, list2) => list2.createdAt - list1.createdAt);
+
 			const invitedUserLists = { ...this.props.currentUser.inviteIDs };
+
+			console.log(Object.keys(this.props.currentUser.inviteIDs));
 
 			this.setState({
 				todoLists: userLists,
@@ -77,13 +81,20 @@ class UserLists extends React.Component {
 				document.querySelector('#modal-close').click();
 
 				this.getLists().then(listData => {
-					const userLists = listData.filter(list =>
-						this.props.currentUser.todoListIDs.includes(list.id)
+					const userLists = listData.filter(
+						list =>
+							this.props.currentUser.todoListIDs.includes(list.id) ||
+							Object.keys(this.props.currentUser.inviteIDs).includes(list.id)
 					);
+
+					userLists.sort((list1, list2) => list2.createdAt - list1.createdAt);
+
+					const invitedUserLists = { ...this.props.currentUser.inviteIDs };
 
 					this.setState({
 						listName: '',
-						todoLists: userLists
+						todoLists: userLists,
+						invitedLists: invitedUserLists
 					});
 				});
 

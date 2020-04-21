@@ -30,7 +30,8 @@ export const createUserProfileDocument = async (userAuth, additionalData) => {
 				...additionalData,
 				userID: uid.match(/\d/g).join(''),
 				todoListIDs: [],
-				inviteIDs: {}
+				inviteIDs: {},
+				invitesSent: {}
 			});
 		} catch (error) {
 			console.log('Error creating user', error.message);
