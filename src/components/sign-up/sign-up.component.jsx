@@ -15,7 +15,9 @@ class SignUp extends React.Component {
 			displayName: '',
 			email: '',
 			password: '',
-			confirmPassword: ''
+			confirmPassword: '',
+			showError: false,
+			errorMsg: ''
 		};
 	}
 
@@ -45,6 +47,10 @@ class SignUp extends React.Component {
 			});
 		} catch (error) {
 			console.error(error);
+			this.setState({
+				showError: true,
+				errorMsg: error.message
+			});
 		}
 	};
 
@@ -104,6 +110,11 @@ class SignUp extends React.Component {
 						</div>
 					</div>
 				</form>
+				{this.state.showError ? (
+					<span id='error-message' className='animated pulse infinite'>
+						{this.state.errorMsg}
+					</span>
+				) : null}
 			</div>
 		);
 	}

@@ -1,0 +1,23 @@
+.toast {
+	width: 275px;
+	opacity: 0;
+	display: inline-block;
+	position: absolute;
+	bottom: 0;
+	transition: opacity 1s, bottom 1s, background-color 1s;
+	text-align: center;
+	font-weight: bold;
+	color: #fff;
+
+	&.toast-error {
+		bottom: 30px;
+		opacity: 1;
+		background-color: darkred;
+	}
+
+	&.toast-success {
+		bottom: 30px;
+		opacity: 1;
+		background-color: darkgreen;
+	}
+}

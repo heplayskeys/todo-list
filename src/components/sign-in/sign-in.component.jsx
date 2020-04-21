@@ -13,7 +13,9 @@ class SignIn extends React.Component {
 
 		this.state = {
 			email: '',
-			password: ''
+			password: '',
+			showError: false,
+			errorMsg: ''
 		};
 	}
 
@@ -24,9 +26,13 @@ class SignIn extends React.Component {
 
 		try {
 			await auth.signInWithEmailAndPassword(email, password);
-			this.setState({ email: '', password: '' });
+			this.setState({ email: '', password: '', showError: false });
 		} catch (error) {
 			console.log(error);
+			this.setState({
+				showError: true,
+				errorMsg: error.message
+			});
 		}
 	};
 
@@ -41,7 +47,6 @@ class SignIn extends React.Component {
 			<div className='sign-in'>
 				<h2 className='title'>I already have an account</h2>
 				<span>Sign in with your email and password</span>
-
 				<form onSubmit={this.handleSubmit}>
 					<FormInput
 						name='email'
@@ -77,6 +82,11 @@ class SignIn extends React.Component {
 						</div>
 					</div>
 				</form>
+				{this.state.showError ? (
+					<span id='error-message' className='animated pulse infinite'>
+						{this.state.errorMsg}
+					</span>
+				) : null}
 			</div>
 		);
 	}

@@ -1,37 +1,68 @@
 import React from 'react';
+import { Link, Redirect } from 'react-router-dom';
+import { connect } from 'react-redux';
+import { firestore } from '../../firebase/firebase.utils';
 
 import TodoForm from '../../components/todo-form/todo-form.component';
 import Todo from '../../components/todo/todo.component';
 import ListTitle from '../../components/list-title/list-title.component';
+import CustomButton from '../../components/custom-button/custom-button.component';
+import InviteModal from '../../components/invite-modal/invite-modal.component';
+import Toast from '../../components/toast/toast.component';
+
 import './todo-list.styles.scss';
 
 class TodoListPage extends React.Component {
-	constructor() {
-		super();
+	constructor(props) {
+		super(props);
 
 		this.state = {
+			allTodos: [],
 			todos: [],
 			todoFilter: 'all',
-			descending: true
+			descending: true,
+			toastType: null
 		};
 	}
 
-	addTodo = todo => {
+	async componentDidMount() {
+		if (this.props.match.url === '/' && this.props.currentUser) {
+			return (
+				<Redirect to={`/user/${this.props.currentUser.userID}/todo-lists`} />
+			);
+		}
+
+		const { todoListID } = this.props.match.params;
+		const todoListRef = firestore.doc(`todoLists/${todoListID}`);
+		todoListRef.get().then(todoList => this.setState({ ...todoList.data() }));
+
+		if (!this.state.descending) {
+			this.reverseSortTodos();
+		}
+	}
+
+	addTodo = async todo => {
 		this.setState(state => ({
 			todos: [todo, ...state.todos]
 		}));
+
+		this.updateDB();
 	};
 
-	deleteTodo = id => {
+	deleteTodo = async id => {
 		this.setState(state => ({
 			todos: state.todos.filter(todo => todo.id !== id)
 		}));
+
+		this.updateDB();
 	};
 
 	deleteCompleteTodos = () => {
 		this.setState(state => ({
 			todos: state.todos.filter(todo => !todo.complete)
 		}));
+
+		this.updateDB();
 	};
 
 	markAllComplete = () => {
@@ -41,6 +72,8 @@ class TodoListPage extends React.Component {
 				complete: true
 			}))
 		}));
+
+		this.updateDB();
 	};
 
 	setAllActive = () => {
@@ -50,12 +83,16 @@ class TodoListPage extends React.Component {
 				complete: false
 			}))
 		}));
+
+		this.updateDB();
 	};
 
 	filterTodos = event => {
 		this.setState({
 			todoFilter: event.target.name
 		});
+
+		this.updateDB();
 	};
 
 	reverseSortTodos = todos => {
@@ -79,10 +116,33 @@ class TodoListPage extends React.Component {
 				return todo;
 			})
 		}));
+
+		this.updateDB();
+	};
+
+	handleInvite = async toastMsg => {
+		this.setState({
+			toastType: toastMsg
+		});
+	};
+
+	updateDB = async () => {
+		const { todoListID } = this.props.match.params;
+		const todoListRef = firestore.doc(`todoLists/${todoListID}`);
+		const todoListSnapshot = await todoListRef.get();
+
+		if (todoListSnapshot.exists) {
+			try {
+				todoListRef.update({
+					...this.state
+				});
+			} catch (error) {
+				console.log('Error deleting todo', error.message);
+			}
+		}
 	};
 
 	render() {
-		//    console.log(this.props); to see Router objects
 		let todos = [];
 		let clearTodosBtn = this.state.todos.some(todo => todo.complete) ? (
 			<button className='dropdown-item' onClick={this.deleteCompleteTodos}>
@@ -164,7 +224,7 @@ class TodoListPage extends React.Component {
 
 		return (
 			<div className='list-page-container'>
-				<ListTitle />
+				<ListTitle listID={this.state.id} listName={this.state.listName} />
 				<TodoForm onSubmit={this.addTodo} />
 				<div className='filter-buttons'>
 					<span>Show:</span>
@@ -232,34 +292,60 @@ class TodoListPage extends React.Component {
 				</div>
 				<div className='active-todos'>
 					Still Todos: {this.state.todos.filter(todo => !todo.complete).length}
+					{this.props.currentUser ? (
+						<div className='list-extras'>
+							<CustomButton
+								className='invite-btn btn btn-outline-dark'
+								data-toggle='modal'
+								data-target='#inviteUser'
+								onClick={this.handleInvite}
+							>
+								Invite to List
+							</CustomButton>
+							<InviteModal
+								handleInvite={this.handleInvite}
+								todoListID={this.state.id}
+							/>
+						</div>
+					) : (
+						<div className='list-extras'>
+							<Link className='sign-btn btn btn-outline-dark' to='/signin'>
+								Sign Up
+							</Link>
+							<span>* Sign Up to Save Your Lists</span>
+						</div>
+					)}
 				</div>
+				{this.state.toastType !== null ? (
+					<Toast type={this.state.toastType} />
+				) : null}
 			</div>
 		);
 	}
 }
 
-export default TodoListPage;
+const mapStateToProps = ({ user }) => ({
+	currentUser: user.currentUser
+});
 
-// <div className="bulk-actions">
-//   {allComplete}
-//   {allActive}
-//   {clearTodosBtn}
-// </div>;
+export default connect(mapStateToProps)(TodoListPage);
 
-// let clearTodosBtn = this.state.todos.some(todo => todo.complete) ? (
-//   <button className="dropdown-item" onClick={this.deleteCompleteTodos}>
-//     Clear Completed
-//   </button>
-// ) : null;
-
-// let allComplete = this.state.todos.some(todo => !todo.complete) ? (
-//   <button className="dropdown-item" onClick={this.markAllComplete}>
-//     Mark All Complete
-//   </button>
-// ) : null;
-
-// let allActive = this.state.todos.some(todo => todo.complete) ? (
-//   <button className="dropdown-item" onClick={this.setAllActive}>
-//     Set All Active
-//   </button>
-// ) : null;
+// {
+// 	this.props.currentUser ? (
+// 		<div className='sign-up-save'>
+// 			<CustomButton
+// 				className='invite-btn btn btn-outline-dark'
+// 				onClick={this.handleInvite}
+// 			>
+// 				Invite to List
+// 			</CustomButton>
+// 		</div>
+// 	) : (
+// 		<div className='sign-up-save'>
+// 			<Link className='sign-btn btn btn-outline-dark' to='/signin'>
+// 				Sign Up
+// 			</Link>
+// 			<span>* Sign Up to Save Your Lists</span>
+// 		</div>
+// 	);
+// }

@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import CustomButton from '../../components/custom-button/custom-button.component';
 import FormInput from '../../components/form-input/form-input.component';
+import LoadingSpinner from '../../components/loading-spinner/loading-spinner.component';
 
 import shortid from 'shortid';
 import { firestore } from '../../firebase/firebase.utils';
@@ -15,18 +16,31 @@ class UserLists extends React.Component {
 
 		this.state = {
 			listName: '',
-			todoLists: []
+			todoLists: [],
+			invitedLists: {},
+			isloaded: false
 		};
 	}
 
 	componentDidMount() {
+		setTimeout(() => {
+			this.setState({
+				isloaded: true
+			});
+		}, 2000);
+
 		this.getLists().then(listData => {
-			const userLists = listData.filter(list =>
-				this.props.currentUser.todoListIDs.includes(list.id)
+			const userLists = listData.filter(
+				list =>
+					this.props.currentUser.todoListIDs.includes(list.id) ||
+					Object.keys(this.props.currentUser.inviteIDs).includes(list.id)
 			);
 
+			const invitedUserLists = { ...this.props.currentUser.inviteIDs };
+
 			this.setState({
-				todoLists: userLists
+				todoLists: userLists,
+				invitedLists: invitedUserLists
 			});
 		});
 	}
@@ -51,12 +65,16 @@ class UserLists extends React.Component {
 						adminID: userID,
 						contributorIDs: [],
 						listName: this.state.listName,
-						todoIDs: [],
+						todos: [],
+						todoFilter: 'all',
+						descending: true,
 						createdAt
 					});
 				} catch (error) {
 					console.log('Error creating todo list', error.message);
 				}
+
+				document.querySelector('#modal-close').click();
 
 				this.getLists().then(listData => {
 					const userLists = listData.filter(list =>
@@ -115,8 +133,19 @@ class UserLists extends React.Component {
 		});
 	};
 
+	keyPressHandler = event => {
+		if (this.state.listName === '') {
+			return;
+		}
+
+		if (event.key === 'Enter') {
+			this.createTodoList();
+			document.querySelector('#modal-close').click();
+		}
+	};
+
 	render() {
-		const { history, location, match } = this.props;
+		const { match } = this.props;
 		const { listName, todoLists } = this.state;
 
 		let mappedTodos = todoLists.map(list => {
@@ -127,7 +156,9 @@ class UserLists extends React.Component {
 			);
 		});
 
-		return (
+		return !this.state.isloaded ? (
+			<LoadingSpinner message='todoLists' />
+		) : (
 			<div className='lists-container'>
 				<div className='list-header'>
 					<h2 className='user-greeting'>{`Hello, ${
@@ -165,6 +196,7 @@ class UserLists extends React.Component {
 										Create New Todo List
 									</h5>
 									<button
+										id='modal-close'
 										type='button'
 										className='close'
 										data-dismiss='modal'
@@ -173,17 +205,23 @@ class UserLists extends React.Component {
 										<span aria-hidden='true'>&times;</span>
 									</button>
 								</div>
-								<div className='modal-body'>
+								<div className='modal-body' style={{ paddingBottom: '0px' }}>
 									<FormInput
+										id='newListName'
 										name='listName'
 										type='text'
 										value={listName}
 										label='List Name'
 										handleChange={this.handleChange}
+										onKeyPress={event => this.keyPressHandler(event)}
 										required
 									/>
+									<div className='required-field'>* Required</div>
 								</div>
-								<div className='modal-footer'>
+								<div
+									className='modal-footer'
+									style={{ paddingTop: '0px', borderTop: 'none' }}
+								>
 									<button
 										type='button'
 										className='btn btn-secondary'
@@ -195,7 +233,6 @@ class UserLists extends React.Component {
 										type='button'
 										className='btn btn-primary'
 										onClick={() => this.createTodoList()}
-										data-dismiss='modal'
 									>
 										Create
 									</button>

@@ -9,6 +9,7 @@ import Header from '../src/components/header/header.component';
 import TodoListPage from './pages/todo-list/todo-list.component';
 import SignInAndSignUpPage from './pages/sign-in-and-sign-up/sign-in-and-sign-up.component';
 import UserLists from './pages/user-lists/user-lists.component';
+import SignOut from './pages/sign-out/sign-out.component';
 import { setCurrentUser } from './redux/user/user.actions';
 
 class App extends React.Component {
@@ -55,10 +56,11 @@ class App extends React.Component {
 							)
 						}
 					/>
+					<Route exact path='/signout' component={SignOut} />
 					<Route exact path='/user/:userID/todo-lists' component={UserLists} />
 					<Route
 						exact
-						path='/user/:userID/todo-lists/:todoListID'
+						path='/user/:userID/todo-lists/todo-list/:todoListID'
 						component={TodoListPage}
 					/>
 					<Route path='/' component={TodoListPage} />

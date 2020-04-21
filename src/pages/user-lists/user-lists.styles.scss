@@ -34,4 +34,15 @@
 			text-decoration: none;
 		}
 	}
+
+	.modal-body {
+		.group {
+			margin-bottom: 10px;
+		}
+	}
+
+	.required-field {
+		font-size: 0.8rem;
+		color: darkred;
+	}
 }

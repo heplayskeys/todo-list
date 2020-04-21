@@ -21,24 +21,26 @@ const Header = ({ currentUser }) => {
 
 	const handleLogout = () => {
 		auth.signOut();
-		history.push('/');
+		history.push('/signout');
+	};
+
+	const renderHome = () => {
+		currentUser
+			? history.push(`/user/${currentUser.userID}/todo-lists`)
+			: history.push('/');
 	};
 
 	return (
 		<div className='header navbar navbar-light'>
-			<Link to='/' className='nav-title'>
+			<div onClick={() => renderHome()} className='nav-title'>
 				<h1>Cloud ToDo</h1>
-			</Link>
+			</div>
 			<div className='options'>
 				<Link
 					className='option'
-					to={
-						currentUser
-							? `/user/${currentUser.userID}/todo-lists`
-							: '/todo-list'
-					}
+					to={currentUser ? `/user/${currentUser.userID}/todo-lists` : '/'}
 				>
-					<Option>TODO LISTS</Option>
+					<Option>{currentUser ? 'TODO LISTS' : null}</Option>
 				</Link>
 				<Link className='option' to='/contact'>
 					<Option>CONTACT</Option>
