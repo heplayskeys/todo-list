@@ -1,4 +1,5 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import shortid from 'shortid';
 
 import './todo-form.styles.scss';
@@ -30,7 +31,8 @@ class TodoForm extends React.Component {
 		this.props.onSubmit({
 			id: shortid.generate(),
 			text: this.state.text,
-			complete: false
+			complete: false,
+			contributorID: this.props.currentUser.userID
 		});
 
 		this.setState({
@@ -62,4 +64,8 @@ class TodoForm extends React.Component {
 	}
 }
 
-export default TodoForm;
+const mapStateToProps = ({ user }) => ({
+	currentUser: user.currentUser
+});
+
+export default connect(mapStateToProps)(TodoForm);

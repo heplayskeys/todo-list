@@ -49,7 +49,13 @@ class TodoListPage extends React.Component {
 		this.updateDB();
 	};
 
-	deleteTodo = async id => {
+	deleteTodo = async (id, contributorID) => {
+		const { userID } = this.props.currentUser;
+
+		if (userID === contributorID) {
+			return;
+		}
+
 		this.setState(state => ({
 			todos: state.todos.filter(todo => todo.id !== id)
 		}));
@@ -272,9 +278,11 @@ class TodoListPage extends React.Component {
 						<Todo
 							key={todo.id}
 							id={todo.id}
-							deleteTodo={() => this.deleteTodo(todo.id)}
+							deleteTodo={() => this.deleteTodo(todo.id, todo.contributorID)}
 							toggleComplete={() => this.toggleComplete(todo.id)}
 							todo={todo}
+							contributorID={todo.contributorID}
+							adminID={this.state.adminID}
 						/>
 					))}
 				</div>
@@ -305,6 +313,7 @@ class TodoListPage extends React.Component {
 							<InviteModal
 								handleInvite={this.handleInvite}
 								todoListID={this.state.id}
+								adminID={this.state.adminID}
 							/>
 						</div>
 					) : (

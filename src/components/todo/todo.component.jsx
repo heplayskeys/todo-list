@@ -1,9 +1,13 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import './todo.styles.scss';
 
 const Todo = props => {
 	const {
 		todo: { id, text, complete },
+		currentUser: { userID },
+		adminID,
+		contributorID,
 		toggleComplete,
 		deleteTodo
 	} = props;
@@ -29,14 +33,24 @@ const Todo = props => {
 			>
 				{text}
 			</div>
-			<button className='delete-todo badge badge-danger' onClick={deleteTodo}>
+			<button
+				className={`delete-todo badge badge-danger ${
+					userID !== contributorID && userID !== adminID ? 'disable-delete' : ''
+				}`}
+				onClick={deleteTodo}
+				disabled={userID !== contributorID}
+			>
 				X
 			</button>
 		</div>
 	);
 };
 
-export default Todo;
+const mapStateToProps = ({ user }) => ({
+	currentUser: user.currentUser
+});
+
+export default connect(mapStateToProps)(Todo);
 
 // <input type="checkbox" id={id} name={id} onClick={toggleComplete} />
 

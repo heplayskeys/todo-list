@@ -85,29 +85,30 @@ class InviteModal extends React.Component {
 
 	dbInviteUser = async userEmail => {
 		const {
-			currentUser: { userID, displayName },
+			currentUser: { id, displayName, email, invitesSent },
 			todoListID,
 			handleInvite
 		} = this.props;
 
 		const inviteData = {
-			[todoListID]: displayName
+			[todoListID]: { displayName, email }
 		};
-
-		const currentUserInviteData = {};
 
 		try {
 			const updateRef = firestore.collection('users');
 			const updateSnapshot = await updateRef.get();
 			updateSnapshot.docs.forEach(doc => {
+				console.log(doc.data().userID, this.props.adminID);
+
 				if (doc.data().email === userEmail) {
-					if (Object.keys(doc.data().inviteIDs).includes(todoListID)) {
-						console.log('User has already been invited to this list.');
+					if (
+						Object.keys(doc.data().inviteIDs).includes(todoListID) ||
+						doc.data().userID === this.props.adminID
+					) {
+						console.error('ERROR: Unable to send invite to this user.');
 						handleInvite('error');
 						return;
 					} else {
-						currentUserInviteData[todoListID] = doc.data().displayName;
-
 						updateRef.doc(doc.id).update({
 							inviteIDs: { ...inviteData, ...doc.data().inviteIDs }
 						});
@@ -120,19 +121,34 @@ class InviteModal extends React.Component {
 					return;
 				}
 			});
+
+			try {
+				const currentUserRef = firestore.doc(`users/${id}`);
+				await currentUserRef.get().then(() => {
+					let inviteData = invitesSent[userEmail];
+					let updatedInviteData = [];
+
+					if (inviteData === undefined || inviteData.includes(todoListID)) {
+						updatedInviteData = [todoListID];
+					} else {
+						updatedInviteData = [todoListID, ...inviteData];
+					}
+
+					const updateData = {
+						...invitesSent,
+						[userEmail]: updatedInviteData
+					};
+
+					currentUserRef.update({
+						invitesSent: updateData
+					});
+				});
+			} catch (error) {
+				console.error('ERROR: Unable to update invites.');
+			}
 		} catch (error) {
 			handleInvite(null);
 			console.error('ERROR: Unable to invite user. Email not found.');
-		}
-
-		try {
-			const currentUserData = firestore.doc(`users/${userID}`);
-			console.log(currentUserData);
-			// await currentUserData.update({
-			// 	invitesSent: {...currentUserInviteData,
-			// });
-		} catch (error) {
-			console.log('ERROR: Unable to update sent invites.');
 		}
 	};
 
@@ -170,7 +186,7 @@ class InviteModal extends React.Component {
 								value={this.state.inviteEmail}
 								label='User Email'
 								handleChange={this.handleChange}
-								onKeyPress={event => this.keyPressHandler(event)}
+								onKeyPress={this.keyPressHandler}
 								required
 							/>
 							<div

@@ -40,13 +40,32 @@ class UserLists extends React.Component {
 
 			const invitedUserLists = { ...this.props.currentUser.inviteIDs };
 
-			console.log(Object.keys(this.props.currentUser.inviteIDs));
-
 			this.setState({
 				todoLists: userLists,
 				invitedLists: invitedUserLists
 			});
 		});
+	}
+
+	componentDidUpdate(prevProps) {
+		if (prevProps.currentUser !== this.props.currentUser) {
+			this.getLists().then(listData => {
+				const userLists = listData.filter(
+					list =>
+						this.props.currentUser.todoListIDs.includes(list.id) ||
+						Object.keys(this.props.currentUser.inviteIDs).includes(list.id)
+				);
+
+				userLists.sort((list1, list2) => list2.createdAt - list1.createdAt);
+
+				const invitedUserLists = { ...this.props.currentUser.inviteIDs };
+
+				this.setState({
+					todoLists: userLists,
+					invitedLists: invitedUserLists
+				});
+			});
+		}
 	}
 
 	createTodoList = async () => {
@@ -75,7 +94,7 @@ class UserLists extends React.Component {
 						createdAt
 					});
 				} catch (error) {
-					console.log('Error creating todo list', error.message);
+					console.error('ERROR: Unable to create todo list', error.message);
 				}
 
 				document.querySelector('#modal-close').click();
@@ -129,7 +148,7 @@ class UserLists extends React.Component {
 					todoListIDs: [...currentListIDs, newListID]
 				});
 			} catch (error) {
-				console.log("Error updating user's todo lists", error.message);
+				console.error('ERROR: Unable to update todo lists', error.message);
 			}
 		}
 	};
@@ -155,14 +174,69 @@ class UserLists extends React.Component {
 		}
 	};
 
+	handleInvite = async (response, listID) => {
+		const { id, inviteIDs, todoListIDs } = this.props.currentUser;
+		let updatedTodoLists = [];
+		let updatedInvitedLists = {};
+
+		const currentUserRef = firestore.doc(`users/${id}`);
+		await currentUserRef.get().then(() => {
+			// Remove invited list from inviteIDs
+			updatedInvitedLists = inviteIDs;
+			delete updatedInvitedLists[listID];
+
+			if (response === 'accept') {
+				// Add invited to todo lists
+				updatedTodoLists = [listID, ...todoListIDs];
+			} else {
+				// Leave todo lists as is
+				updatedTodoLists = [...todoListIDs];
+			}
+
+			currentUserRef.update({
+				todoListIDs: updatedTodoLists,
+				inviteIDs: updatedInvitedLists
+			});
+		});
+	};
+
 	render() {
 		const { match } = this.props;
-		const { listName, todoLists } = this.state;
+		const { listName, todoLists, invitedLists } = this.state;
 
 		let mappedTodos = todoLists.map(list => {
 			return (
 				<li key={list.id} id={list.id} className='todo-list-li'>
-					<Link to={`${match.url}/todo-list/${list.id}`}>{list.listName}</Link>
+					<Link
+						to={
+							Object.keys(invitedLists).includes(list.id)
+								? '#'
+								: `${match.url}/todo-list/${list.id}`
+						}
+						className={
+							Object.keys(invitedLists).includes(list.id) ? 'invited' : ''
+						}
+					>
+						{list.listName}
+					</Link>
+					{Object.keys(invitedLists).includes(list.id) ? (
+						<div className='invite-options'>
+							<Link
+								to='#'
+								className='badge badge-success accept'
+								onClick={() => this.handleInvite('accept', list.id)}
+							>
+								Accept
+							</Link>
+							<Link
+								to='#'
+								className='badge badge-danger decline'
+								onClick={() => this.handleInvite('decline', list.id)}
+							>
+								Decline
+							</Link>
+						</div>
+					) : null}
 				</li>
 			);
 		});

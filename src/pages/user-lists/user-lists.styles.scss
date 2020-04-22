@@ -30,8 +30,34 @@
 		margin-bottom: 10px;
 
 		a:hover {
-			color: black;
+			color: rgb(0, 0, 0);
 			text-decoration: none;
+		}
+
+		.invited {
+			font-weight: normal;
+			opacity: 0.5;
+
+			&:hover {
+				cursor: not-allowed;
+			}
+		}
+
+		.invite-options {
+			display: inline-flex;
+			width: 100px;
+			justify-content: space-evenly;
+
+			a {
+				cursor: pointer;
+				opacity: 0.75;
+				transition: opacity 0.75s ease;
+
+				&:hover {
+					opacity: 1;
+					color: #fff;
+				}
+			}
 		}
 	}
 
