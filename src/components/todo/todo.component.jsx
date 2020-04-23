@@ -5,7 +5,6 @@ import './todo.styles.scss';
 const Todo = props => {
 	const {
 		todo: { id, text, complete },
-		currentUser: { userID },
 		adminID,
 		contributorID,
 		toggleComplete,
@@ -35,10 +34,20 @@ const Todo = props => {
 			</div>
 			<button
 				className={`delete-todo badge badge-danger ${
-					userID !== contributorID && userID !== adminID ? 'disable-delete' : ''
+					props.currentUser
+						? props.currentUser.userID !== contributorID &&
+						  props.currentUser.userID !== adminID
+							? 'disable-delete'
+							: ''
+						: ''
 				}`}
 				onClick={deleteTodo}
-				disabled={userID !== contributorID}
+				disabled={
+					props.currentUser
+						? props.currentUser.userID !== adminID ||
+						  props.currentUser.userID !== contributorID
+						: true
+				}
 			>
 				X
 			</button>

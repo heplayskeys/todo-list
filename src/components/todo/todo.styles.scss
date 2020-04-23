@@ -22,15 +22,20 @@
 		color: #343a40;
 
 		&:hover {
+			cursor: pointer;
 			background-color: #dc3545;
 			color: #fff;
 		}
 
+		&:active {
+			background-color: #bb2c3a;
+		}
+
 		&.disable-delete {
 			cursor: not-allowed;
-			background-color: #c7c7c7;
+			background-color: #f8f9fa;
 			opacity: 0.35;
-			color: #fff;
+			color: #c7c7c7;
 		}
 	}
 }

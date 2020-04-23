@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, Redirect } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { firestore } from '../../firebase/firebase.utils';
 
@@ -9,6 +9,7 @@ import ListTitle from '../../components/list-title/list-title.component';
 import CustomButton from '../../components/custom-button/custom-button.component';
 import InviteModal from '../../components/invite-modal/invite-modal.component';
 import Toast from '../../components/toast/toast.component';
+import LoadingSpinner from '../../components/loading-spinner/loading-spinner.component';
 
 import './todo-list.styles.scss';
 
@@ -21,27 +22,113 @@ class TodoListPage extends React.Component {
 			todos: [],
 			todoFilter: 'all',
 			descending: true,
-			toastType: null
+			toastType: null,
+			isLoaded: false,
+			loggedIn: false
 		};
 	}
 
-	async componentDidMount() {
-		if (this.props.match.url === '/' && this.props.currentUser) {
-			return (
-				<Redirect to={`/user/${this.props.currentUser.userID}/todo-lists`} />
+	componentDidMount() {
+		if (this.props.currentUser) {
+			this.initialize();
+		} else {
+			this.setState(
+				{
+					isLoaded: false
+				},
+				() => {
+					if (!this.props.currentUser && this.props.match.url === '/') {
+						this.setState({
+							isLoaded: true
+						});
+					}
+				}
 			);
-		}
-
-		const { todoListID } = this.props.match.params;
-		const todoListRef = firestore.doc(`todoLists/${todoListID}`);
-		todoListRef.get().then(todoList => this.setState({ ...todoList.data() }));
-
-		if (!this.state.descending) {
-			this.reverseSortTodos();
 		}
 	}
 
-	addTodo = async todo => {
+	componentDidUpdate(prevProps) {
+		if (!this.currentUser) {
+			return;
+		}
+
+		if (
+			(this.props.currentUser &&
+				!this.state.isLoaded &&
+				this.props.location.state) ||
+			prevProps.location.state.lastUpdated !== Date.now()
+		) {
+			const { contributorIDs, adminID } = this.props.location.state;
+			const { userID } = this.props.currentUser;
+
+			if (contributorIDs.includes(userID) || userID === adminID) {
+				this.getTodos().then(data => {
+					this.setState({ ...data, isLoaded: true, loggedIn: true });
+				});
+			}
+		} else if (this.props.currentUser) {
+			const { userID, todoListID } = this.props.match.params;
+			const { currentUser } = this.props;
+
+			if (
+				currentUser.userID !== userID ||
+				!currentUser.todoListIDs.includes(todoListID)
+			) {
+				this.renderRedirect();
+			}
+		}
+		// else if (
+		// 	this.props.currentUser &&
+		// 	this.state.isLoaded &&
+		// 	prevProps.location.state.lastUpdated !== Date.now()
+		// ) {
+		// 	this.getTodos().then(data => {
+		// 		this.setState({
+		// 			todos: data.todos
+		// 		});
+		// 	});
+		// }
+
+		// else if (
+		// 	this.props.currentUser &&
+		// 	this.state.isLoaded &&
+		// 	this.props.location.state
+		// ) {
+		// 	this.getTodos().then(data => {
+		// 		this.setState({ ...data, isLoaded: true, loggedIn: true });
+		// 	});
+		// }
+	}
+
+	initialize = () => {
+		this.getTodos().then(data => {
+			const { userID } = this.props.match.params;
+			const { currentUser } = this.props;
+
+			if (
+				(data.contributorIDs.includes(userID) &&
+					currentUser.userID === userID) ||
+				(userID === data.adminID && currentUser.userID === userID)
+			) {
+				this.setState({ ...data, isLoaded: true, loggedIn: true });
+			}
+		});
+	};
+
+	renderRedirect = () => {
+		document.querySelector('#home').click();
+	};
+
+	getTodos = async () => {
+		const { todoListID } = this.props.match.params;
+		const todoListRef = firestore.doc(`todoLists/${todoListID}`);
+		const todoListSnapshot = await todoListRef.get();
+		const todoList = todoListSnapshot.data();
+
+		return todoList;
+	};
+
+	addTodo = todo => {
 		this.setState(state => ({
 			todos: [todo, ...state.todos]
 		}));
@@ -49,18 +136,25 @@ class TodoListPage extends React.Component {
 		this.updateDB();
 	};
 
-	deleteTodo = async (id, contributorID) => {
-		const { userID } = this.props.currentUser;
+	deleteTodo = (id, contributorID) => {
+		if (this.state.loggedIn) {
+			const { userID } = this.props.currentUser;
+			const { adminID } = this.state;
 
-		if (userID === contributorID) {
-			return;
+			if (userID === contributorID || userID === adminID) {
+				this.setState(state => ({
+					todos: state.todos.filter(todo => todo.id !== id)
+				}));
+
+				this.updateDB();
+			} else {
+				return;
+			}
+		} else {
+			this.setState(state => ({
+				todos: state.todos.filter(todo => todo.id !== id)
+			}));
 		}
-
-		this.setState(state => ({
-			todos: state.todos.filter(todo => todo.id !== id)
-		}));
-
-		this.updateDB();
 	};
 
 	deleteCompleteTodos = () => {
@@ -101,16 +195,13 @@ class TodoListPage extends React.Component {
 		this.updateDB();
 	};
 
-	reverseSortTodos = todos => {
-		let reverseTodos = [];
-		todos.forEach(todo => {
-			reverseTodos.unshift(todo);
-		});
-
+	reverseSortTodos = () => {
 		this.setState(state => ({
-			todos: reverseTodos,
-			descending: !state.descending
+			descending: !state.descending,
+			todos: state.todos.reverse()
 		}));
+
+		this.updateDB();
 	};
 
 	toggleComplete = id => {
@@ -133,14 +224,23 @@ class TodoListPage extends React.Component {
 	};
 
 	updateDB = async () => {
-		const { todoListID } = this.props.match.params;
-		const todoListRef = firestore.doc(`todoLists/${todoListID}`);
+		if (!this.state.loggedIn) {
+			return;
+		}
+
+		const { id } = this.props.location.state;
+		const todoListRef = firestore.doc(`todoLists/${id}`);
 		const todoListSnapshot = await todoListRef.get();
 
 		if (todoListSnapshot.exists) {
 			try {
+				const { descending, listName, todoFilter, todos } = this.state;
 				todoListRef.update({
-					...this.state
+					descending,
+					listName,
+					todoFilter,
+					todos,
+					lastUpdated: Date.now()
 				});
 			} catch (error) {
 				console.log('Error deleting todo', error.message);
@@ -181,10 +281,7 @@ class TodoListPage extends React.Component {
 		);
 
 		let reverseSort = (
-			<button
-				className='dropdown-item'
-				onClick={() => this.reverseSortTodos(todos)}
-			>
+			<button className='dropdown-item' onClick={() => this.reverseSortTodos()}>
 				Reverse Sort
 				{this.state.descending ? (
 					<span id='sort-arrow'>&#8673;</span>
@@ -228,7 +325,9 @@ class TodoListPage extends React.Component {
 				todos = this.state.todos;
 		}
 
-		return (
+		return !this.state.isLoaded ? (
+			<LoadingSpinner message='todoList' />
+		) : (
 			<div className='list-page-container'>
 				<ListTitle listID={this.state.id} listName={this.state.listName} />
 				<TodoForm onSubmit={this.addTodo} />
@@ -357,4 +456,15 @@ export default connect(mapStateToProps)(TodoListPage);
 // 			<span>* Sign Up to Save Your Lists</span>
 // 		</div>
 // 	);
+// }
+
+// const { userID } = this.props.match.params;
+// const { currentUser } = this.props;
+
+// if (
+// 	(data.contributorIDs.includes(userID) &&
+// 		currentUser.userID === userID) ||
+// 	(userID === data.adminID && currentUser.userID === userID)
+// ) {
+// this.setState({ ...data, isLoaded: true });
 // }

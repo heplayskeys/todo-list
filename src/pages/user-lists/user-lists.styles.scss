@@ -16,6 +16,10 @@
 		font-weight: bold;
 	}
 
+	.active-todo-lists-title {
+		margin-bottom: 1rem;
+	}
+
 	.user-todo-lists {
 		width: 92%;
 		margin: 20px auto 20px auto;
@@ -25,13 +29,40 @@
 		overflow: scroll;
 	}
 
-	.todo-list-li {
+	.todo-list-div {
 		list-style: square;
 		margin-bottom: 10px;
+		display: flex;
+		flex-direction: column;
 
-		a:hover {
-			color: rgb(0, 0, 0);
-			text-decoration: none;
+		.dot {
+			visibility: hidden;
+		}
+
+		.list-details {
+			font-size: 0.8rem;
+			color: #9c9c9c;
+			visibility: hidden;
+		}
+
+		&:hover {
+			font-weight: bold;
+			cursor: pointer;
+
+			a {
+				color: rgb(0, 0, 0);
+				text-decoration: none;
+			}
+
+			.dot {
+				visibility: visible;
+				font-weight: normal;
+			}
+
+			.list-details {
+				visibility: visible;
+				font-weight: normal;
+			}
 		}
 
 		.invited {
@@ -70,5 +101,10 @@
 	.required-field {
 		font-size: 0.8rem;
 		color: darkred;
+
+		&.max-characters {
+			color: #343a40;
+			margin: 5px 0 0 8px;
+		}
 	}
 }

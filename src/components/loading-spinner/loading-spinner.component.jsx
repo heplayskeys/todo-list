@@ -5,7 +5,8 @@ import './loading-spinner.styles.scss';
 
 class LoadingSpinner extends React.Component {
 	loadingTypes = {
-		todoLists: 'Loading Lists',
+		userLists: 'Loading Lists',
+		todoList: 'Getting Todos',
 		signout: 'Signing Out'
 	};
 

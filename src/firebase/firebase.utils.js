@@ -21,6 +21,7 @@ export const createUserProfileDocument = async (userAuth, additionalData) => {
 	if (!snapShot.exists) {
 		const { uid, displayName, email } = userAuth;
 		const createdAt = new Date();
+		const lastActive = new Date();
 
 		try {
 			userRef.set({
@@ -28,6 +29,7 @@ export const createUserProfileDocument = async (userAuth, additionalData) => {
 				displayName,
 				email,
 				createdAt,
+				lastActive,
 				...additionalData,
 				userID: uid.match(/\d/g).join(''),
 				todoListIDs: [],

@@ -18,33 +18,18 @@ class UserLists extends React.Component {
 			listName: '',
 			todoLists: [],
 			invitedLists: {},
-			isloaded: false
+			isLoaded: false
 		};
 	}
 
 	componentDidMount() {
-		setTimeout(() => {
+		if (this.props.currentUser) {
+			this.initialize();
+		} else {
 			this.setState({
-				isloaded: true
+				isLoaded: false
 			});
-		}, 2000);
-
-		this.getLists().then(listData => {
-			const userLists = listData.filter(
-				list =>
-					this.props.currentUser.todoListIDs.includes(list.id) ||
-					Object.keys(this.props.currentUser.inviteIDs).includes(list.id)
-			);
-
-			userLists.sort((list1, list2) => list2.createdAt - list1.createdAt);
-
-			const invitedUserLists = { ...this.props.currentUser.inviteIDs };
-
-			this.setState({
-				todoLists: userLists,
-				invitedLists: invitedUserLists
-			});
-		});
+		}
 	}
 
 	componentDidUpdate(prevProps) {
@@ -62,11 +47,32 @@ class UserLists extends React.Component {
 
 				this.setState({
 					todoLists: userLists,
-					invitedLists: invitedUserLists
+					invitedLists: invitedUserLists,
+					isLoaded: true
 				});
 			});
 		}
 	}
+
+	initialize = () => {
+		this.getLists().then(listData => {
+			const userLists = listData.filter(
+				list =>
+					this.props.currentUser.todoListIDs.includes(list.id) ||
+					Object.keys(this.props.currentUser.inviteIDs).includes(list.id)
+			);
+
+			userLists.sort((list1, list2) => list2.createdAt - list1.createdAt);
+
+			const invitedUserLists = { ...this.props.currentUser.inviteIDs };
+
+			this.setState({
+				todoLists: userLists,
+				invitedLists: invitedUserLists,
+				isLoaded: true
+			});
+		});
+	};
 
 	createTodoList = async () => {
 		if (this.state.listName === '') {
@@ -74,24 +80,26 @@ class UserLists extends React.Component {
 		}
 
 		if (this.props.currentUser) {
-			const { id, userID, todoListIDs } = this.props.currentUser;
+			const { id, userID, todoListIDs, displayName } = this.props.currentUser;
 			const newListID = shortid.generate().substr(0, 4);
 			const listRef = firestore.doc(`todoLists/${newListID}`);
 			const listSnapshot = await listRef.get();
 
 			if (!listSnapshot.exists) {
-				const createdAt = new Date();
+				const createdAt = Date.now();
 
 				try {
 					listRef.set({
 						id: newListID,
 						adminID: userID,
+						createdBy: displayName,
 						contributorIDs: [],
 						listName: this.state.listName,
 						todos: [],
 						todoFilter: 'all',
 						descending: true,
-						createdAt
+						createdAt,
+						lastUpdated: createdAt
 					});
 				} catch (error) {
 					console.error('ERROR: Unable to create todo list', error.message);
@@ -188,6 +196,7 @@ class UserLists extends React.Component {
 			if (response === 'accept') {
 				// Add invited to todo lists
 				updatedTodoLists = [listID, ...todoListIDs];
+				this.updateContributors(listID);
 			} else {
 				// Leave todo lists as is
 				updatedTodoLists = [...todoListIDs];
@@ -200,23 +209,46 @@ class UserLists extends React.Component {
 		});
 	};
 
+	goToList = id => {
+		document.querySelector(`[listid='${id}']`).click();
+	};
+
+	updateContributors = async listID => {
+		const { userID } = this.props.currentUser;
+		const listPageRef = firestore.doc(`todoLists/${listID}`);
+		await listPageRef.get().then(doc => {
+			const updatedContributors = [...doc.data().contributorIDs, userID];
+			listPageRef.update({
+				contributorIDs: updatedContributors
+			});
+		});
+	};
+
 	render() {
 		const { match } = this.props;
 		const { listName, todoLists, invitedLists } = this.state;
 
 		let mappedTodos = todoLists.map(list => {
 			return (
-				<li key={list.id} id={list.id} className='todo-list-li'>
+				<div
+					key={list.id}
+					id={list.id}
+					className='todo-list-div'
+					onClick={() => this.goToList(list.id)}
+				>
 					<Link
-						to={
-							Object.keys(invitedLists).includes(list.id)
+						listid={list.id}
+						to={{
+							pathname: Object.keys(invitedLists).includes(list.id)
 								? '#'
-								: `${match.url}/todo-list/${list.id}`
-						}
+								: `${match.url}/todo-list/${list.id}`,
+							state: { ...list }
+						}}
 						className={
 							Object.keys(invitedLists).includes(list.id) ? 'invited' : ''
 						}
 					>
+						<span className='dot'>&#9999; </span>
 						{list.listName}
 					</Link>
 					{Object.keys(invitedLists).includes(list.id) ? (
@@ -237,12 +269,15 @@ class UserLists extends React.Component {
 							</Link>
 						</div>
 					) : null}
-				</li>
+					<div className='list-details'>{`Created by ${
+						list.createdBy
+					} on ${new Date(list.createdAt).toLocaleDateString()}`}</div>
+				</div>
 			);
 		});
 
-		return !this.state.isloaded ? (
-			<LoadingSpinner message='todoLists' />
+		return !this.state.isLoaded ? (
+			<LoadingSpinner message='userLists' />
 		) : (
 			<div className='lists-container'>
 				<div className='list-header'>
@@ -258,7 +293,7 @@ class UserLists extends React.Component {
 						<h4>Active ToDo Lists:</h4>
 					</div>
 					<div className='listed-todo-lists'>
-						<ul>{mappedTodos}</ul>
+						<div className='lists'>{mappedTodos}</div>
 					</div>
 				</div>
 				<div className='add-todo-list-btn'>
@@ -299,9 +334,11 @@ class UserLists extends React.Component {
 										label='List Name'
 										handleChange={this.handleChange}
 										onKeyPress={event => this.keyPressHandler(event)}
+										maxLength={35}
 										required
 									/>
 									<div className='required-field'>* Required</div>
+									<div className='required-field max-characters'>{`${this.state.listName.length} characters (maximum 35 characters)`}</div>
 								</div>
 								<div
 									className='modal-footer'

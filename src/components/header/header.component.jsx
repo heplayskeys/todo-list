@@ -30,7 +30,7 @@ const Header = ({ currentUser }) => {
 
 	return (
 		<div className='header navbar navbar-light'>
-			<div onClick={() => renderHome()} className='nav-title'>
+			<div onClick={() => renderHome()} className='nav-title' id='home'>
 				<h1>Cloud ToDo</h1>
 			</div>
 			<div className='options'>

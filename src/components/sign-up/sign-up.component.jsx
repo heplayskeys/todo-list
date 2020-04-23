@@ -71,7 +71,7 @@ class SignUp extends React.Component {
 					<FormInput
 						name='displayName'
 						type='text'
-						maxLength={75}
+						maxLength={15}
 						value={displayName}
 						label='Username'
 						handleChange={this.handleChange}

@@ -32,7 +32,9 @@ class TodoForm extends React.Component {
 			id: shortid.generate(),
 			text: this.state.text,
 			complete: false,
-			contributorID: this.props.currentUser.userID
+			contributorID: this.props.currentUser
+				? this.props.currentUser.userID
+				: null
 		});
 
 		this.setState({
