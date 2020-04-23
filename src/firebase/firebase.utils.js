@@ -21,7 +21,7 @@ export const createUserProfileDocument = async (userAuth, additionalData) => {
 	if (!snapShot.exists) {
 		const { uid, displayName, email } = userAuth;
 		const createdAt = new Date();
-		const lastActive = new Date();
+		const lastActive = Date.now();
 
 		try {
 			userRef.set({
@@ -34,7 +34,8 @@ export const createUserProfileDocument = async (userAuth, additionalData) => {
 				userID: uid.match(/\d/g).join(''),
 				todoListIDs: [],
 				inviteIDs: {},
-				invitesSent: {}
+				invitesSent: {},
+				activeTodoList: null
 			});
 		} catch (error) {
 			console.log('Error creating user', error.message);

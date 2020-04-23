@@ -44,7 +44,7 @@ class ListTitle extends React.Component {
 		});
 	};
 
-	handleClick = async () => {
+	handleClick = () => {
 		if (this.state.title === '') {
 			return;
 		}

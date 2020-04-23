@@ -46,9 +46,6 @@
 		}
 
 		&:hover {
-			font-weight: bold;
-			cursor: pointer;
-
 			a {
 				color: rgb(0, 0, 0);
 				text-decoration: none;
@@ -83,6 +80,7 @@
 				cursor: pointer;
 				opacity: 0.75;
 				transition: opacity 0.75s ease;
+				color: #fff;
 
 				&:hover {
 					opacity: 1;
@@ -101,10 +99,11 @@
 	.required-field {
 		font-size: 0.8rem;
 		color: darkred;
+	}
 
-		&.max-characters {
-			color: #343a40;
-			margin: 5px 0 0 8px;
-		}
+	.max-characters {
+		font-size: 0.8rem;
+		color: #343a40;
+		margin-right: 20px;
 	}
 }

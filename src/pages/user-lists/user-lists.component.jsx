@@ -152,9 +152,13 @@ class UserLists extends React.Component {
 
 		if (userSnapshot.exists) {
 			try {
-				userRef.update({
-					todoListIDs: [...currentListIDs, newListID]
-				});
+				userRef
+					.update({
+						todoListIDs: [...currentListIDs, newListID]
+					})
+					.then(() => {
+						this.updateContributors(newListID);
+					});
 			} catch (error) {
 				console.error('ERROR: Unable to update todo lists', error.message);
 			}
@@ -209,18 +213,18 @@ class UserLists extends React.Component {
 		});
 	};
 
-	goToList = id => {
-		document.querySelector(`[listid='${id}']`).click();
-	};
-
 	updateContributors = async listID => {
-		const { userID } = this.props.currentUser;
+		const { id } = this.props.currentUser;
 		const listPageRef = firestore.doc(`todoLists/${listID}`);
 		await listPageRef.get().then(doc => {
-			const updatedContributors = [...doc.data().contributorIDs, userID];
-			listPageRef.update({
-				contributorIDs: updatedContributors
-			});
+			if (!doc.data().contributorIDs.includes(id)) {
+				const updatedContributors = [...doc.data().contributorIDs, id];
+				listPageRef.update({
+					contributorIDs: updatedContributors
+				});
+			} else {
+				return;
+			}
 		});
 	};
 
@@ -230,45 +234,42 @@ class UserLists extends React.Component {
 
 		let mappedTodos = todoLists.map(list => {
 			return (
-				<div
-					key={list.id}
-					id={list.id}
-					className='todo-list-div'
-					onClick={() => this.goToList(list.id)}
-				>
-					<Link
-						listid={list.id}
-						to={{
-							pathname: Object.keys(invitedLists).includes(list.id)
-								? '#'
-								: `${match.url}/todo-list/${list.id}`,
-							state: { ...list }
-						}}
-						className={
-							Object.keys(invitedLists).includes(list.id) ? 'invited' : ''
-						}
-					>
-						<span className='dot'>&#9999; </span>
-						{list.listName}
-					</Link>
-					{Object.keys(invitedLists).includes(list.id) ? (
-						<div className='invite-options'>
-							<Link
-								to='#'
-								className='badge badge-success accept'
-								onClick={() => this.handleInvite('accept', list.id)}
-							>
-								Accept
-							</Link>
-							<Link
-								to='#'
-								className='badge badge-danger decline'
-								onClick={() => this.handleInvite('decline', list.id)}
-							>
-								Decline
-							</Link>
-						</div>
-					) : null}
+				<div key={list.id} id={list.id} className='todo-list-div'>
+					<div>
+						<Link
+							listid={list.id}
+							to={{
+								pathname: Object.keys(invitedLists).includes(list.id)
+									? `${match.url}`
+									: `${match.url}/todo-list/${list.id}`,
+								state: { ...list }
+							}}
+							className={
+								Object.keys(invitedLists).includes(list.id) ? 'invited' : ''
+							}
+						>
+							<span className='dot'>&#9999; </span>
+							{list.listName}
+						</Link>
+						{Object.keys(invitedLists).includes(list.id) ? (
+							<div className='invite-options'>
+								<Link
+									to='#'
+									className='badge badge-success accept'
+									onClick={() => this.handleInvite('accept', list.id)}
+								>
+									Accept
+								</Link>
+								<Link
+									to='#'
+									className='badge badge-danger decline'
+									onClick={() => this.handleInvite('decline', list.id)}
+								>
+									Decline
+								</Link>
+							</div>
+						) : null}
+					</div>
 					<div className='list-details'>{`Created by ${
 						list.createdBy
 					} on ${new Date(list.createdAt).toLocaleDateString()}`}</div>
@@ -338,12 +339,12 @@ class UserLists extends React.Component {
 										required
 									/>
 									<div className='required-field'>* Required</div>
-									<div className='required-field max-characters'>{`${this.state.listName.length} characters (maximum 35 characters)`}</div>
 								</div>
 								<div
 									className='modal-footer'
 									style={{ paddingTop: '0px', borderTop: 'none' }}
 								>
+									<div className='max-characters'>{`${this.state.listName.length} characters (maximum 35 characters)`}</div>
 									<button
 										type='button'
 										className='btn btn-secondary'

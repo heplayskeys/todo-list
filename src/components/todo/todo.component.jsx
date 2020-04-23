@@ -46,7 +46,7 @@ const Todo = props => {
 					props.currentUser
 						? props.currentUser.userID !== adminID ||
 						  props.currentUser.userID !== contributorID
-						: true
+						: false
 				}
 			>
 				X
