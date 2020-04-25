@@ -35,12 +35,23 @@
 			padding: 10px 15px;
 			cursor: pointer;
 			transition: color 0.2s ease;
-			// color: #fff;
 
 			&:hover {
 				text-decoration: none;
 				color: #fff;
 				font-weight: normal;
+			}
+		}
+
+		.profile-btn {
+			width: 15%;
+
+			&:hover {
+				font-weight: normal;
+			}
+
+			.notification-badge {
+				margin-left: 5px;
 			}
 		}
 	}

@@ -7,6 +7,7 @@ class LoadingSpinner extends React.Component {
 	loadingTypes = {
 		userLists: 'Loading Lists',
 		todoList: 'Getting Todos',
+		profilePage: 'Grabbing Profile',
 		signout: 'Signing Out'
 	};
 

@@ -84,9 +84,11 @@ class ListTitle extends React.Component {
 
 		if (listSnapshot.exists) {
 			try {
-				listRef.update({
-					listName: this.state.title
-				});
+				listRef
+					.update({
+						listName: this.state.title
+					})
+					.then(this.props.handleListName(this.state.title));
 			} catch (error) {
 				console.log('Error updating list name', error.message);
 			}

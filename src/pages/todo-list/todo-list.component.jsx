@@ -26,13 +26,16 @@ class TodoListPage extends React.Component {
 			lastUpdated: null,
 			isLoaded: false,
 			loggedIn: false,
-			contributorIDs: []
+			contributorIDs: [],
+			id: this.currentUser ? this.props.location.state.id : null
 		};
 	}
 
 	componentDidMount() {
 		if (this.props.currentUser) {
-			this.initialize();
+			setTimeout(() => {
+				this.initialize();
+			}, 500);
 		} else {
 			this.setState(
 				{
@@ -50,25 +53,24 @@ class TodoListPage extends React.Component {
 		}
 	}
 
-	async componentDidUpdate() {
+	async componentDidUpdate(prevProps, prevState) {
+		if (prevState.listName !== this.state.listName) {
+			this.setState({
+				listName: this.state.listName
+			});
+		}
+
 		if (
-			this.props.currentUser &&
+			!this.state.loggedIn &&
 			!this.state.isLoaded &&
+			this.props.currentUser &&
 			this.props.location.state
 		) {
-			this.initialize();
+			// this.initialize();
 
-			const { contributorIDs, adminID } = this.props.location.state;
-			const { userID } = this.props.currentUser;
-
-			if (contributorIDs.includes(userID) || userID === adminID) {
-				this.getTodos().then(data => {
-					this.setState({ ...data, isLoaded: true, loggedIn: true });
-				});
-			}
-		} else if (this.props.currentUser) {
-			const { userID, todoListID } = this.props.match.params;
 			const { currentUser } = this.props;
+			const { userID, todoListID } = this.props.match.params;
+			const { contributorIDs, adminID } = this.props.location.state;
 
 			if (
 				currentUser.userID !== userID ||
@@ -77,47 +79,66 @@ class TodoListPage extends React.Component {
 				this.renderRedirect();
 				return;
 			}
+
+			if (
+				contributorIDs.includes(currentUser.id) ||
+				currentUser.userID === adminID
+			) {
+				this.getTodos().then(data => {
+					this.setState({ ...data, isLoaded: true, loggedIn: true });
+				});
+				return;
+			}
 		}
 
 		if (this.props.currentUser) {
-			const { id, activeTodoList } = this.props.currentUser;
+			const { activeTodoList } = this.props.currentUser;
 
-			if (!this.state.contributorIDs.includes(id)) {
-				return;
-			}
+			// if (!this.state.contributorIDs.includes(id)) {
+			// 	this.renderRedirect();
+			// 	return;
+			// }
 
-			if (activeTodoList !== null && activeTodoList.updated) {
-				const collaborators = [id, ...this.state.contributorIDs];
+			if (
+				activeTodoList !== null &&
+				activeTodoList.wasUpdated &&
+				activeTodoList.listID === this.state.id
+			) {
+				// const collaborators = [id, ...this.state.contributorIDs];
+
+				// if (
+				// 	this.state.contributorIDs.length !== prevState.contributorIDs.length
+				// ) {
+				// 	this.setState({
+				// 		contributorIDs: collaborators
+				// 	});
+				// }
+
 				let listName = '';
 				await this.getTodos().then(data => {
 					listName = data.listName;
 				});
 
-				collaborators.forEach(async userID => {
-					const userRef = firestore.doc(`users/${userID}`);
-					const userSnapshot = await userRef.get();
-
-					if (userSnapshot.exists) {
-						try {
-							userRef
-								.update({
-									activeTodoList: {
-										updated: false,
-										listName: listName
-									}
-								})
-								.then(() => {
-									this.setState({
-										todos: activeTodoList.todos,
-										listName: listName
-									});
-									console.log('User updated');
-								});
-						} catch (error) {
-							console.error('ERROR: Unable to update user document.');
-						}
-					}
-				});
+				try {
+					this.state.contributorIDs.forEach(async userID => {
+						const userRef = firestore.doc(`users/${userID}`);
+						await userRef.get();
+						userRef.update({
+							activeTodoList: {
+								wasUpdated: false,
+								listName: listName
+							}
+						});
+					});
+				} catch (error) {
+					console.error('ERROR: Unable to update user document.');
+				} finally {
+					this.setState({
+						todos: activeTodoList.todos,
+						listName: listName
+						// contributorIDs: collaborators
+					});
+				}
 			}
 		}
 	}
@@ -143,6 +164,10 @@ class TodoListPage extends React.Component {
 	}
 
 	initialize = () => {
+		if (!this.props.currentUser) {
+			return;
+		}
+
 		this.getTodos().then(data => {
 			const { userID } = this.props.match.params;
 			const { currentUser } = this.props;
@@ -233,8 +258,6 @@ class TodoListPage extends React.Component {
 		this.setState({
 			todoFilter: event.target.name
 		});
-
-		this.updateDB();
 	};
 
 	reverseSortTodos = () => {
@@ -259,10 +282,21 @@ class TodoListPage extends React.Component {
 		this.updateDB();
 	};
 
-	handleInvite = async toastMsg => {
+	handleInvite = toastMsg => {
 		this.setState({
 			toastType: toastMsg
 		});
+	};
+
+	handleListName = name => {
+		if (name !== this.state.listName) {
+			this.setState(
+				{
+					listName: name
+				},
+				() => this.updateDB()
+			);
+		}
 	};
 
 	updateDB = async () => {
@@ -273,41 +307,52 @@ class TodoListPage extends React.Component {
 		const { id } = this.props.location.state;
 		const todoListRef = firestore.doc(`todoLists/${id}`);
 		const todoListSnapshot = await todoListRef.get();
-		const collaborators = [
-			this.props.currentUser.id,
-			...this.state.contributorIDs
-		];
+		// const collaborators = [
+		// 	this.props.currentUser.id,
+		// 	...this.state.contributorIDs
+		// ];
+
+		let todoIDs = [];
+		const updatedTodos = [
+			...this.state.todos,
+			...todoListSnapshot.data().todos
+		].map(todo => {
+			if (!todoIDs.includes(todo.id)) {
+				todoIDs.push(todo.id);
+				return todo;
+			} else {
+				return null;
+			}
+		});
 
 		if (todoListSnapshot.exists) {
 			try {
-				const { descending, listName, todoFilter, todos } = this.state;
+				const { descending, listName, todoFilter } = this.state;
 				const updatedAt = Date.now();
 				todoListRef
 					.update({
 						descending,
 						listName,
 						todoFilter,
-						todos,
+						todos: updatedTodos.filter(todo => todo),
 						lastUpdated: updatedAt
 					})
 					.then(() => {
-						collaborators.forEach(async userID => {
+						this.state.contributorIDs.forEach(async userID => {
 							const userRef = firestore.doc(`users/${userID}`);
-							const userSnapshot = await userRef.get();
-
-							if (userSnapshot.exists) {
-								userRef
-									.update({
-										activeTodoList: {
-											updated: true,
-											todos: this.state.todos,
-											listName: this.state.listName
-										}
-									})
-									.then(() => {
-										console.log('User Updated');
-									});
-							}
+							await userRef.get();
+							userRef
+								.update({
+									activeTodoList: {
+										todos: updatedTodos.filter(todo => todo),
+										listName: this.state.listName,
+										listID: id,
+										wasUpdated: true
+									}
+								})
+								.then(() => {
+									console.log('User Updated');
+								});
 						});
 					});
 			} catch (error) {
@@ -400,7 +445,7 @@ class TodoListPage extends React.Component {
 				<ListTitle
 					listID={this.state.id}
 					listName={this.state.listName}
-					updateDB={this.updateDB}
+					handleListName={this.handleListName}
 				/>
 				<TodoForm onSubmit={this.addTodo} />
 				<div className='filter-buttons'>

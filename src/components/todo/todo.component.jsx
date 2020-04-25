@@ -20,7 +20,7 @@ const Todo = props => {
 						type='checkbox'
 						checked={complete}
 						onChange={toggleComplete}
-						className='checkbox-round'
+						className='checkbox-styled'
 					/>
 					<label className='box-label' htmlFor='checkbox'></label>
 				</div>
@@ -49,7 +49,26 @@ const Todo = props => {
 						: false
 				}
 			>
-				X
+				<i className='material-icons'>edit</i>
+			</button>
+			<button
+				className={`delete-todo badge badge-danger ${
+					props.currentUser
+						? props.currentUser.userID !== contributorID &&
+						  props.currentUser.userID !== adminID
+							? 'disable-delete'
+							: ''
+						: ''
+				}`}
+				onClick={deleteTodo}
+				disabled={
+					props.currentUser
+						? props.currentUser.userID !== adminID ||
+						  props.currentUser.userID !== contributorID
+						: false
+				}
+			>
+				<i className='material-icons'>delete</i>
 			</button>
 		</div>
 	);
@@ -99,3 +118,10 @@ export default connect(mapStateToProps)(Todo);
 //   </div>
 //   <input type="text" class="form-control" aria-label="Text input with checkbox">
 // </div>
+
+///////////////////
+// Alternate Check Boxes
+
+// <i className='material-icons checkbox-checked'>
+// 	{complete ? 'check_box' : 'check_box_outline_blank'}
+// </i>;

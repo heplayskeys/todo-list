@@ -4,13 +4,17 @@ import './toast.styles.scss';
 
 const Toast = props => {
 	const { type } = props;
+	const toastTypes = {
+		success: 'Your Invite Has Been Sent',
+		emailSent: 'Email Sent',
+		passwordUpdated: 'Password Updated',
+		error: 'Error Sending Invite'
+	};
 
 	const removeToast = () => {
 		const toast = document.querySelector('#toast-popup');
 		setTimeout(() => {
-			type === 'success'
-				? toast.classList.remove('toast-success')
-				: toast.classList.remove('toast-error');
+			toast.classList.remove(`toast-${type}`);
 		}, 4000);
 	};
 
@@ -21,12 +25,22 @@ const Toast = props => {
 			case 'success':
 				toast.classList.add('toast-success');
 				removeToast();
-				break;
+				return;
+
+			case 'emailSent':
+				toast.classList.add('toast-emailSent');
+				removeToast();
+				return;
+
+			case 'passwordUpdated':
+				toast.classList.add('toast-passwordUpdated');
+				removeToast();
+				return;
 
 			case 'error':
 				toast.classList.add('toast-error');
 				removeToast();
-				break;
+				return;
 
 			default:
 		}
@@ -40,11 +54,7 @@ const Toast = props => {
 			aria-live='assertive'
 			aria-atomic='true'
 		>
-			<div className='toast-body'>
-				{type === 'success'
-					? 'Your Invite Has Been Sent'
-					: 'Error Sending Invite'}
-			</div>
+			<div className='toast-body'>{toastTypes[type]}</div>
 		</div>
 	);
 };

@@ -7,8 +7,10 @@ import './App.css';
 
 import Header from '../src/components/header/header.component';
 import TodoListPage from './pages/todo-list/todo-list.component';
+import Profile from './pages/profile/profile.component';
 import SignInAndSignUpPage from './pages/sign-in-and-sign-up/sign-in-and-sign-up.component';
 import UserLists from './pages/user-lists/user-lists.component';
+import ResetPassword from './pages/reset-password/reset-password.component';
 import SignOut from './pages/sign-out/sign-out.component';
 import { setCurrentUser } from './redux/user/user.actions';
 
@@ -16,6 +18,10 @@ class App extends React.Component {
 	unsubscribeFromAuth = null;
 
 	componentDidMount() {
+		this.passwordUpdateRequired = auth.isSignInWithEmailLink(
+			window.location.href
+		);
+
 		const { setCurrentUser } = this.props;
 
 		this.unsubscribeFromAuth = auth.onAuthStateChanged(async userAuth => {
@@ -48,20 +54,37 @@ class App extends React.Component {
 						path='/signin'
 						render={() =>
 							this.props.currentUser ? (
-								<Redirect
-									to={`/user/${this.props.currentUser.userID}/todo-lists`}
-								/>
+								auth.isSignInWithEmailLink(window.location.href) ? (
+									<Redirect
+										to={{
+											pathname: `/user/${this.props.currentUser.userID}/profile`,
+											state: {
+												passwordUpdateRequired: true
+											}
+										}}
+									/>
+								) : (
+									<Redirect
+										to={`/user/${this.props.currentUser.userID}/todo-lists`}
+									/>
+								)
 							) : (
 								<SignInAndSignUpPage />
 							)
 						}
 					/>
-					<Route exact path='/signout' component={SignOut} />
+					<Route exact path='/user/:userID/profile' component={Profile} />
 					<Route exact path='/user/:userID/todo-lists' component={UserLists} />
 					<Route
 						exact
 						path='/user/:userID/todo-lists/todo-list/:todoListID'
 						component={TodoListPage}
+					/>
+					<Route exact path='/signout' component={SignOut} />
+					<Route
+						exact
+						path='/reset-password/:userEmail'
+						component={ResetPassword}
 					/>
 					<Route path='/' component={TodoListPage} />
 					/>

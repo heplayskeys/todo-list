@@ -20,4 +20,16 @@
 		opacity: 1;
 		background-color: darkgreen;
 	}
+
+	&.toast-emailSent {
+		bottom: 30px;
+		opacity: 1;
+		background-color: darkgreen;
+	}
+
+	&.toast-passwordUpdated {
+		bottom: 30px;
+		opacity: 1;
+		background-color: darkgreen;
+	}
 }

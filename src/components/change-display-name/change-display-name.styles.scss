@@ -1,0 +1,50 @@
+.change-name {
+	display: flex;
+	flex-direction: column;
+	width: 400px;
+	height: 650px;
+	background: #fff;
+	border-radius: 3%;
+	padding: 25px;
+	border: 1px solid #e9ecef;
+
+	.title {
+		margin: 10px 0;
+	}
+
+	#edit-name-input {
+		color: #343a40;
+
+		&:disabled {
+			color: #a7a7a7;
+			border-bottom: none;
+		}
+	}
+
+	.buttons {
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+		margin: 0 auto;
+
+		.edit-name {
+			display: flex;
+			justify-content: flex-end;
+
+			.edit-name-btn {
+				width: 25%;
+				margin-left: 10px;
+
+				&:disabled {
+					cursor: not-allowed;
+				}
+			}
+		}
+	}
+
+	#error-message {
+		margin: 15px auto 0 auto;
+		color: red;
+		animation-duration: 3s;
+	}
+}

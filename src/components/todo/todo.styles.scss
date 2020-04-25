@@ -2,6 +2,18 @@
 	display: flex;
 	justify-content: center;
 
+	&:hover {
+		.todo-item {
+			cursor: pointer;
+			background-color: #f8f9fa;
+		}
+	}
+
+	.input-group-prepend,
+	.checkbox-styled {
+		cursor: pointer;
+	}
+
 	.todo-item {
 		&:hover {
 			cursor: pointer;

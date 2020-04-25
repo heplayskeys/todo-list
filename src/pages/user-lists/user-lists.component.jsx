@@ -66,11 +66,13 @@ class UserLists extends React.Component {
 
 			const invitedUserLists = { ...this.props.currentUser.inviteIDs };
 
-			this.setState({
-				todoLists: userLists,
-				invitedLists: invitedUserLists,
-				isLoaded: true
-			});
+			setTimeout(() => {
+				this.setState({
+					todoLists: userLists,
+					invitedLists: invitedUserLists,
+					isLoaded: true
+				});
+			}, 500);
 		});
 	};
 
@@ -93,7 +95,7 @@ class UserLists extends React.Component {
 						id: newListID,
 						adminID: userID,
 						createdBy: displayName,
-						contributorIDs: [],
+						contributorIDs: [id],
 						listName: this.state.listName,
 						todos: [],
 						todoFilter: 'all',
