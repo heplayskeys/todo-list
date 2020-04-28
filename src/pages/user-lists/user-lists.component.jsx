@@ -318,7 +318,7 @@ class UserLists extends React.Component {
 				<div className='user-todo-lists'>
 					<div className='active-todo-lists-title'>
 						<h4>Active ToDo Lists:</h4>
-						<div className='form-inline my-2 my-lg-0'>
+						<div className='form-inline my-2 my-lg-0 list-search'>
 							<input
 								className='form-control mr-sm-2'
 								type='search'
@@ -397,14 +397,14 @@ class UserLists extends React.Component {
 									<div className='max-characters'>{`${this.state.listName.length} characters (maximum 35 characters)`}</div>
 									<button
 										type='button'
-										className='btn btn-secondary'
+										className='btn btn-light'
 										data-dismiss='modal'
 									>
 										Cancel
 									</button>
 									<button
 										type='button'
-										className='btn btn-primary'
+										className='btn btn-dark'
 										onClick={() => this.createTodoList()}
 									>
 										Create

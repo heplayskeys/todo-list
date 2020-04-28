@@ -206,7 +206,7 @@ class InviteModal extends React.Component {
 						>
 							<button
 								type='button'
-								className='btn btn-secondary'
+								className='btn btn-light'
 								onClick={() => this.cancelBtn()}
 								data-dismiss='modal'
 							>
@@ -214,7 +214,7 @@ class InviteModal extends React.Component {
 							</button>
 							<button
 								type='button'
-								className='btn btn-primary'
+								className='btn btn-dark'
 								onClick={() => this.handleSubmit()}
 							>
 								Invite
@@ -232,40 +232,3 @@ const mapStateToProps = ({ user }) => ({
 });
 
 export default connect(mapStateToProps)(InviteModal);
-
-// .filter(doc => doc.data().email === userEmail)[0]
-// .data();
-
-// .where('email', '==', userEmail)
-// .get()
-// .then(docs =>
-// 	docs.forEach(doc => {
-// 		const { inviteIDs } = doc.data();
-
-// 		if (Object.keys(inviteIDs).includes(todoListID)) {
-// 			console.log('User has already been invited to this list.');
-// 			handleInvite('error');
-// 			return;
-// 		} else {
-// 			newInviteIDs = { ...inviteData, ...doc.data().inviteIDs };
-// 			invitedUserID = doc.id;
-
-// 			firestore.doc(`users/${invitedUserID}`).update({
-// 				inviteIDs: newInviteIDs
-// 			});
-// 			handleInvite('success');
-
-// 			let currentUserInviteData = {
-// 				[todoListID]: doc.data().userID
-// 			};
-
-// 			firestore.doc(`users/${userID}`).update({
-// 				invitesSent: currentUserInviteData
-// 			});
-// 		}
-
-// 		setTimeout(() => {
-// 			handleInvite(null);
-// 		}, 5000);
-// 	})
-// );

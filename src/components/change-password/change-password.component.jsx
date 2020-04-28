@@ -19,7 +19,8 @@ class ChangePassword extends React.Component {
 			showError: false,
 			errorMsg: '',
 			toastType: null,
-			passwordUpdateRequired: false
+			passwordUpdateRequired: false,
+			loading: false
 		};
 	}
 
@@ -35,6 +36,10 @@ class ChangePassword extends React.Component {
 	}
 
 	handleSubmit = async () => {
+		this.setState({
+			loading: true
+		});
+
 		const { passwordUpdateRequired, currentPassword, newPassword } = this.state;
 		const user = auth.currentUser;
 
@@ -57,7 +62,8 @@ class ChangePassword extends React.Component {
 				this.setState({
 					showError: true,
 					errorMsg: 'Passwords do not match. Please try again.',
-					toastType: null
+					toastType: null,
+					loading: false
 				});
 				return;
 			}
@@ -74,7 +80,8 @@ class ChangePassword extends React.Component {
 					showError: false,
 					errorMsg: '',
 					toastType: 'passwordUpdated',
-					passwordUpdateRequired: false
+					passwordUpdateRequired: false,
+					loading: false
 				});
 				console.log('Password saved.');
 			})
@@ -83,7 +90,8 @@ class ChangePassword extends React.Component {
 				this.setState({
 					showError: true,
 					errorMsg: error.message,
-					toastType: null
+					toastType: null,
+					loading: false
 				});
 			});
 	};
@@ -202,21 +210,32 @@ class ChangePassword extends React.Component {
 									Cancel
 								</button>
 							) : null}
-							<button
-								type='submit'
-								className='btn btn-dark change-password-btn'
-								name={this.state.editMode ? 'save' : 'edit'}
-								onClick={this.handleClick}
-								disabled={
-									(currentPassword === '' ||
-										newPassword === '' ||
-										confirmNewPassword === '' ||
-										newPassword.length !== confirmNewPassword.length) &&
-									this.state.editMode
-								}
-							>
-								{this.state.editMode ? 'Confirm' : 'Change Password'}
-							</button>
+							{this.state.loading ? (
+								<button
+									className='btn btn-dark change-password-btn pw-spinner'
+									disabled
+								>
+									<div className='spinner-border spinner-border' role='status'>
+										<span className='sr-only'>Loading...</span>
+									</div>
+								</button>
+							) : (
+								<button
+									type='submit'
+									className='btn btn-dark change-password-btn'
+									name={this.state.editMode ? 'save' : 'edit'}
+									onClick={this.handleClick}
+									disabled={
+										(currentPassword === '' ||
+											newPassword === '' ||
+											confirmNewPassword === '' ||
+											newPassword.length !== confirmNewPassword.length) &&
+										this.state.editMode
+									}
+								>
+									{this.state.editMode ? 'Confirm' : 'Change Password'}
+								</button>
+							)}
 						</div>
 					</div>
 				</form>

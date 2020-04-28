@@ -10,6 +10,7 @@ import CustomButton from '../../components/custom-button/custom-button.component
 import InviteModal from '../../components/invite-modal/invite-modal.component';
 import Toast from '../../components/toast/toast.component';
 import LoadingSpinner from '../../components/loading-spinner/loading-spinner.component';
+import ReactTooltip from 'react-tooltip';
 
 import './todo-list.styles.scss';
 
@@ -365,8 +366,12 @@ class TodoListPage extends React.Component {
 			<div>
 				<div className='list-page-container'>
 					{this.props.currentUser ? (
-						<div className='contributor-count'>
+						<div
+							className='contributor-count'
+							data-tip='Currently Active Users'
+						>
 							{this.state.activeContributors.length}
+							<ReactTooltip place='left' />
 						</div>
 					) : null}
 					<ListTitle

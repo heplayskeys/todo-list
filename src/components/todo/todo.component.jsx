@@ -96,9 +96,13 @@ const Todo = props => {
 						? 'disable-edit'
 						: ''
 				} ${state.editMode ? 'editing' : ''}`}
-				onClick={() => {
-					setState({ ...state, editMode: !state.editMode });
-				}}
+				onClick={
+					complete
+						? null
+						: () => {
+								setState({ ...state, editMode: !state.editMode });
+						  }
+				}
 				disabled={
 					props.currentUser
 						? props.currentUser.userID === contributorID ||
