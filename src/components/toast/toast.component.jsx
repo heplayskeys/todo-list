@@ -8,6 +8,7 @@ const Toast = props => {
 		success: 'Your Invite Has Been Sent',
 		emailSent: 'Email Sent',
 		passwordUpdated: 'Password Updated',
+		inviteAccepted: 'List Joined',
 		error: 'Error Sending Invite'
 	};
 
@@ -34,6 +35,11 @@ const Toast = props => {
 
 			case 'passwordUpdated':
 				toast.classList.add('toast-passwordUpdated');
+				removeToast();
+				return;
+
+			case 'inviteAccepted':
+				toast.classList.add('toast-inviteAccepted');
 				removeToast();
 				return;
 

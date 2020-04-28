@@ -27,172 +27,111 @@ class TodoListPage extends React.Component {
 			isLoaded: false,
 			loggedIn: false,
 			contributorIDs: [],
-			id: this.currentUser ? this.props.location.state.id : null
+			activeContributors: [],
+			id: this.currentUser ? this.props.location.state.id : null,
+			todoSearch: ''
 		};
+
+		this.unsubscribeFromList = null;
 	}
 
 	componentDidMount() {
-		if (this.props.currentUser) {
-			setTimeout(() => {
-				this.initialize();
-			}, 500);
-		} else {
-			this.setState(
-				{
-					isLoaded: false,
-					lastUpdated: Date.now()
-				},
-				() => {
-					if (!this.props.currentUser && this.props.match.url === '/') {
-						this.setState({
-							isLoaded: true
-						});
-					}
-				}
-			);
+		this.fetchListData();
+
+		if (!this.props.currentUser) {
+			if (this.props.match.url === '/') {
+				setTimeout(() => {
+					this.setState({
+						isLoaded: true
+					});
+				}, 1000);
+			}
 		}
 	}
 
-	async componentDidUpdate(prevProps, prevState) {
-		if (prevState.listName !== this.state.listName) {
-			this.setState({
-				listName: this.state.listName
-			});
-		}
+	componentDidUpdate(prevProps, prevState) {
+		const { currentUser } = this.props;
+		const { userID } = this.props.match.params;
 
-		if (
-			!this.state.loggedIn &&
-			!this.state.isLoaded &&
-			this.props.currentUser &&
-			this.props.location.state
-		) {
-			// this.initialize();
-
-			const { currentUser } = this.props;
-			const { userID, todoListID } = this.props.match.params;
-			const { contributorIDs, adminID } = this.props.location.state;
-
+		if (currentUser) {
 			if (
 				currentUser.userID !== userID ||
-				!currentUser.todoListIDs.includes(todoListID)
+				!currentUser.todoListIDs.includes(this.state.id)
 			) {
 				this.renderRedirect();
 				return;
-			}
+			} else if (!this.state.loggedIn && !this.state.isLoaded) {
+				this.setState(
+					{
+						loggedIn: true,
+						isLoaded: true
+					},
+					async () => {
+						const listRef = firestore.doc(`todoLists/${this.state.id}`);
+						const listSnap = await listRef.get();
+						const activeUsers = [...listSnap.data().activeContributors];
 
-			if (
-				contributorIDs.includes(currentUser.id) ||
-				currentUser.userID === adminID
-			) {
-				this.getTodos().then(data => {
-					this.setState({ ...data, isLoaded: true, loggedIn: true });
-				});
-				return;
+						if (!activeUsers.includes(currentUser.userID)) {
+							activeUsers.push(currentUser.userID);
+						}
+
+						listRef
+							.update({
+								activeContributors: activeUsers
+							})
+							.then(() => {
+								this.setState({
+									activeContributors: activeUsers
+								});
+							});
+					}
+				);
 			}
 		}
+	}
 
-		if (this.props.currentUser) {
-			const { activeTodoList } = this.props.currentUser;
+	componentWillUnmount() {
+		if (this.state.loggedIn || !this.props.currentUser) {
+			return;
+		}
 
-			// if (!this.state.contributorIDs.includes(id)) {
-			// 	this.renderRedirect();
-			// 	return;
-			// }
+		this.unsubscribeFromList();
+	}
 
-			if (
-				activeTodoList !== null &&
-				activeTodoList.wasUpdated &&
-				activeTodoList.listID === this.state.id
-			) {
-				// const collaborators = [id, ...this.state.contributorIDs];
-
-				// if (
-				// 	this.state.contributorIDs.length !== prevState.contributorIDs.length
-				// ) {
-				// 	this.setState({
-				// 		contributorIDs: collaborators
-				// 	});
-				// }
-
-				let listName = '';
-				await this.getTodos().then(data => {
-					listName = data.listName;
-				});
-
-				try {
-					this.state.contributorIDs.forEach(async userID => {
-						const userRef = firestore.doc(`users/${userID}`);
-						await userRef.get();
-						userRef.update({
-							activeTodoList: {
-								wasUpdated: false,
-								listName: listName
-							}
-						});
-					});
-				} catch (error) {
-					console.error('ERROR: Unable to update user document.');
-				} finally {
+	fetchListData = () => {
+		if (this.props.location.state !== undefined) {
+			this.unsubscribeFromList = firestore
+				.collection('todoLists')
+				.doc(`${this.props.location.state.id}`)
+				.onSnapshot(doc => {
 					this.setState({
-						todos: activeTodoList.todos,
-						listName: listName
-						// contributorIDs: collaborators
+						...doc.data()
 					});
-				}
-			}
-		}
-	}
-
-	async componentWillUnmount() {
-		if (!this.props.currentUser) {
-			return;
-		}
-
-		const { id } = this.props.currentUser;
-		const userRef = firestore.doc(`users/${id}`);
-		const userSnapshot = await userRef.get();
-
-		if (userSnapshot.exists) {
-			try {
-				userRef.update({
-					activeTodoList: null
 				});
-			} catch (error) {
-				console.error('ERROR: Unable to update user document.');
-			}
 		}
-	}
-
-	initialize = () => {
-		if (!this.props.currentUser) {
-			return;
-		}
-
-		this.getTodos().then(data => {
-			const { userID } = this.props.match.params;
-			const { currentUser } = this.props;
-
-			if (
-				(data.contributorIDs.includes(currentUser.id) &&
-					currentUser.userID === userID) ||
-				(userID === data.adminID && currentUser.userID === userID)
-			) {
-				this.setState({ ...data, isLoaded: true, loggedIn: true });
-			}
-		});
 	};
 
 	renderRedirect = () => {
 		document.querySelector('#home').click();
 	};
 
-	getTodos = async () => {
-		const { todoListID } = this.props.match.params;
-		const todoListRef = firestore.doc(`todoLists/${todoListID}`);
-		const todoListSnapshot = await todoListRef.get();
-		const todoList = todoListSnapshot.data();
+	setTodo = async (updateTodo, text) => {
+		const updatedTodos = this.state.todos.map(todo => {
+			if (todo.id === updateTodo.id) {
+				return {
+					...todo,
+					text: text
+				};
+			} else {
+				return todo;
+			}
+		});
 
-		return todoList;
+		this.setState({
+			todos: updatedTodos
+		});
+
+		this.updateDB();
 	};
 
 	addTodo = todo => {
@@ -213,7 +152,7 @@ class TodoListPage extends React.Component {
 					todos: state.todos.filter(todo => todo.id !== id)
 				}));
 
-				this.updateDB();
+				this.updateDB(true);
 			} else {
 				return;
 			}
@@ -229,7 +168,7 @@ class TodoListPage extends React.Component {
 			todos: state.todos.filter(todo => !todo.complete)
 		}));
 
-		this.updateDB();
+		this.updateDB(true);
 	};
 
 	markAllComplete = () => {
@@ -299,7 +238,7 @@ class TodoListPage extends React.Component {
 		}
 	};
 
-	updateDB = async () => {
+	updateDB = async (deleteAction = false) => {
 		if (!this.state.loggedIn) {
 			return;
 		}
@@ -307,54 +246,36 @@ class TodoListPage extends React.Component {
 		const { id } = this.props.location.state;
 		const todoListRef = firestore.doc(`todoLists/${id}`);
 		const todoListSnapshot = await todoListRef.get();
-		// const collaborators = [
-		// 	this.props.currentUser.id,
-		// 	...this.state.contributorIDs
-		// ];
 
 		let todoIDs = [];
-		const updatedTodos = [
-			...this.state.todos,
-			...todoListSnapshot.data().todos
-		].map(todo => {
+		const updatedTodos = this.state.todos;
+
+		updatedTodos.forEach(todo => {
 			if (!todoIDs.includes(todo.id)) {
 				todoIDs.push(todo.id);
-				return todo;
-			} else {
-				return null;
 			}
 		});
+
+		if (!deleteAction) {
+			todoListSnapshot.data().todos.forEach(todo => {
+				if (!todoIDs.includes(todo.id)) {
+					todoIDs.push(todo.id);
+					updatedTodos.push(todo);
+				}
+			});
+		}
 
 		if (todoListSnapshot.exists) {
 			try {
 				const { descending, listName, todoFilter } = this.state;
 				const updatedAt = Date.now();
-				todoListRef
-					.update({
-						descending,
-						listName,
-						todoFilter,
-						todos: updatedTodos.filter(todo => todo),
-						lastUpdated: updatedAt
-					})
-					.then(() => {
-						this.state.contributorIDs.forEach(async userID => {
-							const userRef = firestore.doc(`users/${userID}`);
-							await userRef.get();
-							userRef
-								.update({
-									activeTodoList: {
-										todos: updatedTodos.filter(todo => todo),
-										listName: this.state.listName,
-										listID: id,
-										wasUpdated: true
-									}
-								})
-								.then(() => {
-									console.log('User Updated');
-								});
-						});
-					});
+				todoListRef.update({
+					descending,
+					listName,
+					todoFilter,
+					todos: updatedTodos.map(todo => todo),
+					lastUpdated: updatedAt
+				});
 			} catch (error) {
 				console.log('Error deleting todo', error.message);
 			}
@@ -441,109 +362,152 @@ class TodoListPage extends React.Component {
 		return !this.state.isLoaded ? (
 			<LoadingSpinner message='todoList' />
 		) : (
-			<div className='list-page-container'>
-				<ListTitle
-					listID={this.state.id}
-					listName={this.state.listName}
-					handleListName={this.handleListName}
-				/>
-				<TodoForm onSubmit={this.addTodo} />
-				<div className='filter-buttons'>
-					<span>Show:</span>
-					<div className='btn-group'>
-						<button
-							className={`btn btn-sm ${
-								this.state.todoFilter === 'all'
-									? 'btn-secondary'
-									: 'btn-outline-secondary'
-							}`}
-							name='all'
-							onClick={this.filterTodos}
-						>
-							All
-						</button>
-						<button
-							className={`btn btn-sm ${
-								this.state.todoFilter === 'active'
-									? 'btn-secondary'
-									: 'btn-outline-secondary'
-							}`}
-							name='active'
-							onClick={this.filterTodos}
-						>
-							Active
-						</button>
-						<button
-							className={`btn btn-sm ${
-								this.state.todoFilter === 'completed'
-									? 'btn-secondary'
-									: 'btn-outline-secondary'
-							}`}
-							name='completed'
-							onClick={this.filterTodos}
-						>
-							Completed
-						</button>
-					</div>
-					<div className='bulk-actions bulk-actions-dropdown'>
-						{bulkActionsDropdown}
-					</div>
-				</div>
-				<div className='todo-list-container'>
-					{todos.map(todo => (
-						<Todo
-							key={todo.id}
-							id={todo.id}
-							deleteTodo={() => this.deleteTodo(todo.id, todo.contributorID)}
-							toggleComplete={() => this.toggleComplete(todo.id)}
-							todo={todo}
-							contributorID={todo.contributorID}
-							adminID={this.state.adminID}
-						/>
-					))}
-				</div>
-				<div
-					className='more-todos'
-					style={todos.length > 6 ? { display: 'block' } : { display: 'none' }}
-				>
-					<span
-						role='img'
-						aria-label='additional-items'
-						aria-labelledby='additional-items'
-					>
-						&#9899;
-					</span>
-				</div>
-				<div className='active-todos'>
-					Still Todos: {this.state.todos.filter(todo => !todo.complete).length}
+			<div>
+				<div className='list-page-container'>
 					{this.props.currentUser ? (
-						<div className='list-extras'>
-							<CustomButton
-								className='invite-btn btn btn-outline-dark'
-								data-toggle='modal'
-								data-target='#inviteUser'
-								onClick={this.handleInvite}
-							>
-								Invite to List
-							</CustomButton>
-							<InviteModal
-								handleInvite={this.handleInvite}
-								todoListID={this.state.id}
-								adminID={this.state.adminID}
+						<div className='contributor-count'>
+							{this.state.activeContributors.length}
+						</div>
+					) : null}
+					<ListTitle
+						listID={this.state.id}
+						listName={this.state.listName}
+						handleListName={this.handleListName}
+					/>
+					<TodoForm onSubmit={this.addTodo} />
+					<div className='filter-buttons'>
+						<div>
+							<span>Show:</span>
+							<div className='btn-group'>
+								<button
+									className={`btn btn-sm ${
+										this.state.todoFilter === 'all'
+											? 'btn-secondary'
+											: 'btn-outline-secondary'
+									}`}
+									name='all'
+									onClick={this.filterTodos}
+								>
+									All
+								</button>
+								<button
+									className={`btn btn-sm ${
+										this.state.todoFilter === 'active'
+											? 'btn-secondary'
+											: 'btn-outline-secondary'
+									}`}
+									name='active'
+									onClick={this.filterTodos}
+								>
+									Active
+								</button>
+								<button
+									className={`btn btn-sm ${
+										this.state.todoFilter === 'completed'
+											? 'btn-secondary'
+											: 'btn-outline-secondary'
+									}`}
+									name='completed'
+									onClick={this.filterTodos}
+								>
+									Completed
+								</button>
+							</div>
+						</div>
+						<div className='bulk-actions bulk-actions-dropdown'>
+							{bulkActionsDropdown}
+						</div>
+						<div className='form-inline my-2 my-lg-0 search-input'>
+							<input
+								className='form-control mr-sm-2'
+								type='search'
+								placeholder='Search Lists'
+								aria-label='Search'
+								onChange={event => {
+									event.preventDefault();
+									this.setState({
+										todoSearch: event.target.value
+									});
+								}}
 							/>
+							<i className='material-icons mag-glass'>search</i>
 						</div>
-					) : (
-						<div className='list-extras'>
-							<Link className='sign-btn btn btn-outline-dark' to='/signin'>
-								Sign Up
-							</Link>
-							<span>* Sign Up to Save Your Lists</span>
-						</div>
-					)}
+					</div>
+					<div className='todo-list-container'>
+						{todos.map(todo => {
+							return todo.text
+								.toLowerCase()
+								.includes(this.state.todoSearch.toLowerCase()) ? (
+								<Todo
+									key={todo.id}
+									id={todo.id}
+									deleteTodo={() =>
+										this.deleteTodo(todo.id, todo.contributorID)
+									}
+									toggleComplete={() => this.toggleComplete(todo.id)}
+									todo={todo}
+									contributorID={todo.contributorID}
+									adminID={this.state.adminID}
+									listID={this.state.id}
+									setTodo={this.setTodo}
+									textValue={todo.text}
+								/>
+							) : null;
+						})}
+					</div>
+					<div
+						className='more-todos'
+						style={
+							todos.length > 6 ? { display: 'block' } : { display: 'none' }
+						}
+					>
+						<span
+							role='img'
+							aria-label='additional-items'
+							aria-labelledby='additional-items'
+						>
+							&#9899;
+						</span>
+					</div>
+					<div className='active-todos'>
+						Still Todos:{' '}
+						{this.state.todos.filter(todo => !todo.complete).length}
+						{this.props.currentUser ? (
+							<div className='list-extras'>
+								<CustomButton
+									className='invite-btn btn btn-outline-dark'
+									data-toggle='modal'
+									data-target='#inviteUser'
+									onClick={() =>
+										setTimeout(
+											() => document.querySelector('#userEmail').focus(),
+											500
+										)
+									}
+								>
+									Invite to List
+								</CustomButton>
+								<InviteModal
+									handleInvite={this.handleInvite}
+									todoListID={this.state.id}
+									adminID={this.state.adminID}
+								/>
+							</div>
+						) : (
+							<div className='list-extras'>
+								<Link className='sign-btn btn btn-outline-dark' to='/signin'>
+									Sign Up
+								</Link>
+								<span>* Sign Up to Save Your Lists</span>
+							</div>
+						)}
+					</div>
 				</div>
-				{this.state.toastType !== null ? (
-					<Toast type={this.state.toastType} />
-				) : null}
+				<div className='toast-container'>
+					{this.state.toastType !== null ? (
+						<Toast type={this.state.toastType} />
+					) : null}
+				</div>
 			</div>
 		);
 	}
@@ -554,103 +518,3 @@ const mapStateToProps = ({ user }) => ({
 });
 
 export default connect(mapStateToProps)(TodoListPage);
-
-// {
-// 	this.props.currentUser ? (
-// 		<div className='sign-up-save'>
-// 			<CustomButton
-// 				className='invite-btn btn btn-outline-dark'
-// 				onClick={this.handleInvite}
-// 			>
-// 				Invite to List
-// 			</CustomButton>
-// 		</div>
-// 	) : (
-// 		<div className='sign-up-save'>
-// 			<Link className='sign-btn btn btn-outline-dark' to='/signin'>
-// 				Sign Up
-// 			</Link>
-// 			<span>* Sign Up to Save Your Lists</span>
-// 		</div>
-// 	);
-// }
-
-// const { userID } = this.props.match.params;
-// const { currentUser } = this.props;
-
-// if (
-// 	(data.contributorIDs.includes(userID) &&
-// 		currentUser.userID === userID) ||
-// 	(userID === data.adminID && currentUser.userID === userID)
-// ) {
-// this.setState({ ...data, isLoaded: true });
-// }
-
-// -------------------------------------------------
-// componentDidUpdate(prevProps, prevState) {
-// if (!this.currentUser) {
-// 	console.log('this is fucking me up.');
-// 	return;
-// }
-
-// if (prevState.todos !== this.state.todos) {
-// 	console.log('diff');
-// 	// console.log('PREV:', prevState.todos);
-// 	// console.log('THIS:', this.state.todos);
-// 	// this.setState({
-// 	// 	todos: this.state.todos
-// 	// });
-// }
-
-// if (
-// 	this.props.currentUser &&
-// 	!this.state.isLoaded &&
-// 	this.props.location.state
-// ) {
-// 	console.log('Yup Yup');
-// 	this.initialize();
-
-// const { contributorIDs, adminID } = this.props.location.state;
-// const { userID } = this.props.currentUser;
-
-// if (contributorIDs.includes(userID) || userID === adminID) {
-// 	this.getTodos().then(data => {
-// 		this.setState({ ...data, isLoaded: true, loggedIn: true });
-// 	});
-// }
-
-// } else if (this.props.currentUser) {
-// 	const { userID, todoListID } = this.props.match.params;
-// 	const { currentUser } = this.props;
-
-// 	if (
-// 		currentUser.userID !== userID ||
-// 		!currentUser.todoListIDs.includes(todoListID)
-// 	) {
-// 		this.renderRedirect();
-// 		return;
-// 	}
-// }
-
-// else if (
-// 	this.props.currentUser &&
-// 	this.state.isLoaded &&
-// 	prevProps.location.state.lastUpdated !== Date.now()
-// ) {
-// 	this.getTodos().then(data => {
-// 		this.setState({
-// 			todos: data.todos
-// 		});
-// 	});
-// }
-
-// else if (
-// 	this.props.currentUser &&
-// 	this.state.isLoaded &&
-// 	this.props.location.state
-// ) {
-// 	this.getTodos().then(data => {
-// 		this.setState({ ...data, isLoaded: true, loggedIn: true });
-// 	});
-// }
-// }

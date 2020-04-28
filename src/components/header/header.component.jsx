@@ -44,14 +44,8 @@ const Header = ({ currentUser }) => {
 					<Option>CONTACT</Option>
 				</Link>
 				{currentUser ? (
-					<Link
-						type='button'
-						to={`/user/${currentUser.userID}/profile`}
-						className='btn btn-outline-dark profile-btn'
-					>
-						Profile{' '}
-						<span className='badge badge-light notification-badge'>9</span>
-						<span className='sr-only'>unread messages</span>
+					<Link to={`/user/${currentUser.userID}/profile`} className='option'>
+						<Option>ACCOUNT</Option>
 					</Link>
 				) : null}
 				{currentUser ? (
@@ -67,10 +61,6 @@ const Header = ({ currentUser }) => {
 		</div>
 	);
 };
-
-// const mapStateToProps = createStructuredSelector({
-//   currentUser: selectCurrentUser,
-// });
 
 const mapStateToProps = ({ user }) => ({
 	currentUser: user.currentUser

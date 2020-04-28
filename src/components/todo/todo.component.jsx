@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { connect } from 'react-redux';
+
 import './todo.styles.scss';
 
 const Todo = props => {
@@ -8,8 +9,43 @@ const Todo = props => {
 		adminID,
 		contributorID,
 		toggleComplete,
-		deleteTodo
+		deleteTodo,
+		setTodo,
+		textValue
 	} = props;
+
+	const [state, setState] = useState({
+		editMode: false,
+		text: text,
+		inputSelect: true
+	});
+
+	const handleChange = event => {
+		const { value } = event.target;
+		setState({
+			...state,
+			text: value
+		});
+	};
+
+	const setTodoText = async () => {
+		setState({
+			...state,
+			editMode: false
+		});
+
+		setTodo(props.todo, state.text);
+	};
+
+	const keyPressHandler = event => {
+		if (state.text === '') {
+			return;
+		}
+
+		if (event.key === 'Enter') {
+			setTodoText();
+		}
+	};
 
 	return (
 		<div className='todo-container input-group mb-3'>
@@ -19,7 +55,7 @@ const Todo = props => {
 						id={id}
 						type='checkbox'
 						checked={complete}
-						onChange={toggleComplete}
+						onChange={state.editMode ? null : toggleComplete}
 						className='checkbox-styled'
 					/>
 					<label className='box-label' htmlFor='checkbox'></label>
@@ -27,25 +63,48 @@ const Todo = props => {
 			</div>
 			<div
 				type='text'
-				className={`todo-item form-control ${complete ? 'complete' : ''}`}
-				onClick={toggleComplete}
+				className={`todo-item form-control ${complete ? 'complete' : ''} ${
+					state.editMode ? 'edit-input' : ''
+				}`}
+				onClick={state.editMode ? null : toggleComplete}
 			>
-				{text}
+				{state.editMode ? (
+					<input
+						id={`${id}-input`}
+						type='text'
+						className='edit-input-field'
+						value={state.text}
+						onChange={event => handleChange(event)}
+						onBlur={() => {
+							setTodoText();
+						}}
+						onKeyPress={keyPressHandler}
+					/>
+				) : (
+					textValue
+				)}
 			</div>
 			<button
-				className={`delete-todo badge badge-danger ${
+				className={`edit-todo badge badge-light ${
 					props.currentUser
-						? props.currentUser.userID !== contributorID &&
-						  props.currentUser.userID !== adminID
-							? 'disable-delete'
-							: ''
+						? (props.currentUser.userID === adminID ||
+								props.currentUser.userID === contributorID) &&
+						  !complete
+							? ''
+							: 'disable-edit'
+						: complete
+						? 'disable-edit'
 						: ''
-				}`}
-				onClick={deleteTodo}
+				} ${state.editMode ? 'editing' : ''}`}
+				onClick={() => {
+					setState({ ...state, editMode: !state.editMode });
+				}}
 				disabled={
 					props.currentUser
-						? props.currentUser.userID !== adminID ||
-						  props.currentUser.userID !== contributorID
+						? props.currentUser.userID === contributorID ||
+						  props.currentUser.userID === adminID
+							? false
+							: true
 						: false
 				}
 			>
@@ -79,49 +138,3 @@ const mapStateToProps = ({ user }) => ({
 });
 
 export default connect(mapStateToProps)(Todo);
-
-// <input type="checkbox" id={id} name={id} onClick={toggleComplete} />
-
-// return (
-//   <div className="todo-container">
-//     <div className={`${complete ? "complete" : ""}`} onClick={toggleComplete}>
-//       {text}
-//     </div>
-//     <button className="delete-todo badge badge-danger" onClick={deleteTodo}>
-//       X
-//     </button>
-//   </div>
-// );
-
-// <div class="input-group mb-3">
-//   <div class="input-group-prepend">
-//     <button type="button" class="btn btn-outline-secondary">Action</button>
-//     <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-//       <span class="sr-only">Toggle Dropdown</span>
-//     </button>
-//     <div class="dropdown-menu">
-//       <a class="dropdown-item" href="#">Action</a>
-//       <a class="dropdown-item" href="#">Another action</a>
-//       <a class="dropdown-item" href="#">Something else here</a>
-//       <div role="separator" class="dropdown-divider"></div>
-//       <a class="dropdown-item" href="#">Separated link</a>
-//     </div>
-//   </div>
-//   <input type="text" class="form-control" aria-label="Text input with segmented dropdown button">
-// </div>
-
-// <div class="input-group mb-3">
-//   <div class="input-group-prepend">
-//     <div class="input-group-text">
-//       <input type="checkbox" aria-label="Checkbox for following text input">
-//     </div>
-//   </div>
-//   <input type="text" class="form-control" aria-label="Text input with checkbox">
-// </div>
-
-///////////////////
-// Alternate Check Boxes
-
-// <i className='material-icons checkbox-checked'>
-// 	{complete ? 'check_box' : 'check_box_outline_blank'}
-// </i>;

@@ -9,16 +9,22 @@
 		}
 	}
 
+	.todo-item {
+		&.edit-input {
+			background-color: #fff;
+		}
+	}
+
 	.input-group-prepend,
 	.checkbox-styled {
 		cursor: pointer;
 	}
 
-	.todo-item {
-		&:hover {
-			cursor: pointer;
-			background-color: #f8f9fa;
-		}
+	.edit-input-field {
+		border: none;
+		font-weight: bold;
+		width: 100%;
+		padding-left: 5px;
 	}
 
 	.complete {
@@ -48,6 +54,35 @@
 			background-color: #f8f9fa;
 			opacity: 0.35;
 			color: #c7c7c7;
+		}
+	}
+
+	.edit-todo {
+		margin-left: 5px;
+		width: 5%;
+		background-color: #fff;
+		color: #343a40;
+
+		&:hover {
+			cursor: pointer;
+			background-color: #007bff;
+			color: #fff;
+		}
+
+		&:active {
+			background-color: #0062ca;
+		}
+
+		&.disable-edit {
+			cursor: not-allowed;
+			background-color: #f8f9fa;
+			opacity: 0.35;
+			color: #c7c7c7;
+		}
+
+		&.editing {
+			background-color: #0062ca;
+			color: #fff;
 		}
 	}
 }

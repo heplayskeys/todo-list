@@ -17,7 +17,19 @@
 	}
 
 	.active-todo-lists-title {
+		display: flex;
+		justify-content: space-between;
 		margin-bottom: 1rem;
+
+		input {
+			background-image: element('.mag-glass');
+		}
+
+		.mag-glass {
+			font-size: 2rem;
+			margin-right: 5px;
+			opacity: 0.3;
+		}
 	}
 
 	.user-todo-lists {

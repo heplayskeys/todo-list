@@ -1,12 +1,15 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
+import { firestore } from '../../firebase/firebase.utils';
+
 import CustomButton from '../../components/custom-button/custom-button.component';
 import FormInput from '../../components/form-input/form-input.component';
 import LoadingSpinner from '../../components/loading-spinner/loading-spinner.component';
+import Toast from '../../components/toast/toast.component';
+// import SearchField from '../../components/search-field/search-field.component';
 
 import shortid from 'shortid';
-import { firestore } from '../../firebase/firebase.utils';
 
 import './user-lists.styles.scss';
 
@@ -18,7 +21,9 @@ class UserLists extends React.Component {
 			listName: '',
 			todoLists: [],
 			invitedLists: {},
-			isLoaded: false
+			isLoaded: false,
+			toastType: null,
+			listSearch: ''
 		};
 	}
 
@@ -96,6 +101,7 @@ class UserLists extends React.Component {
 						adminID: userID,
 						createdBy: displayName,
 						contributorIDs: [id],
+						activeContributors: [],
 						listName: this.state.listName,
 						todos: [],
 						todoFilter: 'all',
@@ -141,8 +147,15 @@ class UserLists extends React.Component {
 		const listSnapshot = await listRef.get();
 		const listData = listSnapshot.docs;
 
-		listData.forEach(list => {
+		listData.forEach(async list => {
 			todoLists.unshift(list.data());
+			const updateRef = firestore.doc(`todoLists/${list.id}`);
+			const updateSnap = await updateRef.get();
+			updateRef.update({
+				activeContributors: updateSnap
+					.data()
+					.activeContributors.filter(id => id !== this.props.currentUser.userID)
+			});
 		});
 
 		return todoLists;
@@ -203,6 +216,9 @@ class UserLists extends React.Component {
 				// Add invited to todo lists
 				updatedTodoLists = [listID, ...todoListIDs];
 				this.updateContributors(listID);
+				this.setState({
+					toastType: 'inviteAccepted'
+				});
 			} else {
 				// Leave todo lists as is
 				updatedTodoLists = [...todoListIDs];
@@ -212,6 +228,12 @@ class UserLists extends React.Component {
 				todoListIDs: updatedTodoLists,
 				inviteIDs: updatedInvitedLists
 			});
+		});
+	};
+
+	searchLists = value => {
+		this.setState({
+			listSearch: value
 		});
 	};
 
@@ -235,7 +257,9 @@ class UserLists extends React.Component {
 		const { listName, todoLists, invitedLists } = this.state;
 
 		let mappedTodos = todoLists.map(list => {
-			return (
+			return list.listName
+				.toLowerCase()
+				.includes(this.state.listSearch.toLocaleLowerCase()) ? (
 				<div key={list.id} id={list.id} className='todo-list-div'>
 					<div>
 						<Link
@@ -276,7 +300,7 @@ class UserLists extends React.Component {
 						list.createdBy
 					} on ${new Date(list.createdAt).toLocaleDateString()}`}</div>
 				</div>
-			);
+			) : null;
 		});
 
 		return !this.state.isLoaded ? (
@@ -294,13 +318,37 @@ class UserLists extends React.Component {
 				<div className='user-todo-lists'>
 					<div className='active-todo-lists-title'>
 						<h4>Active ToDo Lists:</h4>
+						<div className='form-inline my-2 my-lg-0'>
+							<input
+								className='form-control mr-sm-2'
+								type='search'
+								placeholder='Search Lists'
+								aria-label='Search'
+								onChange={event => {
+									event.preventDefault();
+									this.setState({
+										listSearch: event.target.value
+									});
+								}}
+							/>
+							<i className='material-icons mag-glass'>search</i>
+						</div>
 					</div>
 					<div className='listed-todo-lists'>
 						<div className='lists'>{mappedTodos}</div>
 					</div>
 				</div>
 				<div className='add-todo-list-btn'>
-					<CustomButton data-toggle='modal' data-target='#createList'>
+					<CustomButton
+						data-toggle='modal'
+						data-target='#createList'
+						onClick={() =>
+							setTimeout(
+								() => document.querySelector('#newListName').focus(),
+								500
+							)
+						}
+					>
 						Add New Todo List
 					</CustomButton>
 
@@ -365,6 +413,11 @@ class UserLists extends React.Component {
 							</div>
 						</div>
 					</div>
+				</div>
+				<div className='toast-container'>
+					{this.state.toastType !== null ? (
+						<Toast type={this.state.toastType} />
+					) : null}
 				</div>
 			</div>
 		);
