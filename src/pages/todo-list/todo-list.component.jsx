@@ -50,7 +50,7 @@ class TodoListPage extends React.Component {
 		}
 	}
 
-	componentDidUpdate(prevProps, prevState) {
+	componentDidUpdate() {
 		const { currentUser } = this.props;
 		const { userID } = this.props.match.params;
 
@@ -377,6 +377,7 @@ class TodoListPage extends React.Component {
 					<ListTitle
 						listID={this.state.id}
 						listName={this.state.listName}
+						listAdmin={this.state.adminID}
 						handleListName={this.handleListName}
 					/>
 					<TodoForm onSubmit={this.addTodo} />
@@ -478,26 +479,28 @@ class TodoListPage extends React.Component {
 						Still Todos:{' '}
 						{this.state.todos.filter(todo => !todo.complete).length}
 						{this.props.currentUser ? (
-							<div className='list-extras'>
-								<CustomButton
-									className='invite-btn btn btn-outline-dark'
-									data-toggle='modal'
-									data-target='#inviteUser'
-									onClick={() =>
-										setTimeout(
-											() => document.querySelector('#userEmail').focus(),
-											500
-										)
-									}
-								>
-									Invite to List
-								</CustomButton>
-								<InviteModal
-									handleInvite={this.handleInvite}
-									todoListID={this.state.id}
-									adminID={this.state.adminID}
-								/>
-							</div>
+							this.props.currentUser.userID === this.state.adminID ? (
+								<div className='list-extras'>
+									<CustomButton
+										className='invite-btn btn btn-outline-dark'
+										data-toggle='modal'
+										data-target='#inviteUser'
+										onClick={() =>
+											setTimeout(
+												() => document.querySelector('#userEmail').focus(),
+												500
+											)
+										}
+									>
+										Invite to List
+									</CustomButton>
+									<InviteModal
+										handleInvite={this.handleInvite}
+										todoListID={this.state.id}
+										adminID={this.state.adminID}
+									/>
+								</div>
+							) : null
 						) : (
 							<div className='list-extras'>
 								<Link className='sign-btn btn btn-outline-dark' to='/signin'>

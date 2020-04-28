@@ -1,10 +1,7 @@
 import React from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { connect } from 'react-redux';
-// import { createStructuredSelector } from 'reselect';
-
-import { auth } from '../../firebase/firebase.utils';
-// import { selectCurrentUser } from '../../redux/user/user.selectors';
+import { auth, firestore } from '../../firebase/firebase.utils';
 
 import styled from 'styled-components';
 import './header.styles.scss';
@@ -17,7 +14,21 @@ const Option = styled.div`
 const Header = ({ currentUser }) => {
 	const history = useHistory();
 
-	const handleLogout = () => {
+	const handleLogout = async () => {
+		const listRef = firestore.collection('todoLists');
+		const listSnapshot = await listRef.get();
+		const listData = listSnapshot.docs;
+
+		listData.forEach(async list => {
+			const updateRef = firestore.doc(`todoLists/${list.id}`);
+			const updateSnap = await updateRef.get();
+			updateRef.update({
+				activeContributors: updateSnap
+					.data()
+					.activeContributors.filter(id => id !== currentUser.userID)
+			});
+		});
+
 		auth.signOut();
 		history.push('/signout');
 	};

@@ -217,7 +217,7 @@ class SignIn extends React.Component {
 									<button
 										type='button'
 										name='send-email'
-										className='btn btn-primary'
+										className='btn btn-dark'
 										onClick={this.handleClick}
 									>
 										Send

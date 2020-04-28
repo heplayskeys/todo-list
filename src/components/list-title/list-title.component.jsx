@@ -49,6 +49,10 @@ class ListTitle extends React.Component {
 			return;
 		}
 
+		if (this.props.currentUser.userID !== this.props.listAdmin) {
+			return;
+		}
+
 		this.setState(state => ({
 			editMode: !state.editMode,
 			titleChanged: true
@@ -118,11 +122,29 @@ class ListTitle extends React.Component {
 						<span className='sr-only'>Loading...</span>
 					</div>
 				)}
-				<span id='edit-title'>&#9998;</span>
+				{this.props.currentUser ? (
+					this.props.currentUser.userID === this.props.listAdmin ? (
+						<span id='edit-title'>&#9998;</span>
+					) : null
+				) : (
+					<span id='edit-title'>&#9998;</span>
+				)}
 			</h1>
 		);
 
-		return <div className='title-container'>{listTitle}</div>;
+		return (
+			<div
+				className={`title-container ${
+					this.props.currentUser
+						? this.props.currentUser.userID === this.props.listAdmin
+							? 'admin'
+							: ''
+						: 'admin'
+				}`}
+			>
+				{listTitle}
+			</div>
+		);
 	}
 }
 
