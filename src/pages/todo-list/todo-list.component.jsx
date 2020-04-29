@@ -43,9 +43,11 @@ class TodoListPage extends React.Component {
 
 		if (!this.props.currentUser) {
 			if (this.props.match.url === '/') {
-				this.setState({
-					isLoaded: true
-				});
+				setTimeout(() => {
+					this.setState({
+						isLoaded: true
+					});
+				}, 1000);
 			}
 		}
 	}
@@ -443,7 +445,11 @@ class TodoListPage extends React.Component {
 		}
 
 		return !this.state.isLoaded ? (
-			<LoadingSpinner message='todoList' />
+			this.props.currentUser ? (
+				<LoadingSpinner message='todoList' />
+			) : (
+				<LoadingSpinner message='contactPage' />
+			)
 		) : (
 			<div className='list-page-container'>
 				{this.props.currentUser ? (
