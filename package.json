@@ -1,6 +1,6 @@
 {
-	"homepage": "https://heplayskeys.github.io/todo-app",
-	"name": "todo-app",
+	"homepage": "https://heplayskeys.github.io/todo-list",
+	"name": "todo-list",
 	"version": "0.1.0",
 	"private": true,
 	"dependencies": {
