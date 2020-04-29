@@ -43,11 +43,9 @@ class TodoListPage extends React.Component {
 
 		if (!this.props.currentUser) {
 			if (this.props.match.url === '/') {
-				// setTimeout(() => {
 				this.setState({
 					isLoaded: true
 				});
-				// }, 1000);
 			}
 		}
 	}

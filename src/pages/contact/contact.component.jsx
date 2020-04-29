@@ -12,7 +12,7 @@ const Contact = () => {
 	useEffect(() => {
 		setTimeout(() => {
 			setState({ isLoaded: true });
-		}, 1500);
+		}, 1000);
 	});
 
 	return (
@@ -30,7 +30,13 @@ const Contact = () => {
 				<div className='contact-card-container'>
 					<div className='contact-card'>
 						<div className='contact-photo'>
-							<div id='nbernstein' className='contact-image'></div>
+							<div
+								id='nbernstein'
+								className='contact-image'
+								style={{
+									backgroundImage: `url('http://drive.google.com/uc?export=view&id=1yIkygBaoW-YL6yN_47dV6WRW-NUQWQPQ')`
+								}}
+							></div>
 						</div>
 						<div className='contact-info'>
 							<h2>Nick Bernstein</h2>
@@ -40,7 +46,13 @@ const Contact = () => {
 
 					<div className='contact-card'>
 						<div className='contact-photo'>
-							<div id='sjohnson' className='contact-image'></div>
+							<div
+								id='sjohnson'
+								className='contact-image'
+								style={{
+									backgroundImage: `url('http://drive.google.com/uc?export=view&id=1B4egLoQILOI_uLduHNlIcJ121BHPCy87')`
+								}}
+							></div>
 						</div>
 						<div className='contact-info'>
 							<h2>Steven Johnson</h2>
@@ -49,7 +61,13 @@ const Contact = () => {
 					</div>
 					<div className='contact-card'>
 						<div className='contact-photo'>
-							<div id='jobryan' className='contact-image'></div>
+							<div
+								id='jobryan'
+								className='contact-image'
+								style={{
+									backgroundImage: `url('http://drive.google.com/uc?export=view&id=15l-sd33mipMC2je1_8_wAI0JT595DmSn')`
+								}}
+							></div>
 						</div>
 						<div className='contact-info'>
 							<h2>Jacob O'Bryan</h2>
