@@ -17,45 +17,57 @@ class SignUp extends React.Component {
 			password: '',
 			confirmPassword: '',
 			showError: false,
-			errorMsg: ''
+			errorMsg: '',
+			loading: false
 		};
 	}
 
-	handleSubmit = async event => {
+	handleSubmit = event => {
 		event.preventDefault();
 
-		const { displayName, email, password, confirmPassword } = this.state;
+		this.setState(
+			{
+				loading: true
+			},
+			() => {
+				setTimeout(async () => {
+					const { displayName, email, password, confirmPassword } = this.state;
 
-		if (password !== confirmPassword) {
-			// alert('Passwords do not match. Please try again.');
-			this.setState({
-				showError: true,
-				errorMsg: 'Passwords do not match. Please try again.'
-			});
-			return;
-		}
+					if (password !== confirmPassword) {
+						this.setState({
+							showError: true,
+							errorMsg: 'Passwords do not match. Please try again.',
+							loading: false
+						});
+						return;
+					}
 
-		try {
-			const { user } = await auth.createUserWithEmailAndPassword(
-				email,
-				password
-			);
+					try {
+						const { user } = await auth.createUserWithEmailAndPassword(
+							email,
+							password
+						);
 
-			await createUserProfileDocument(user, { displayName });
+						await createUserProfileDocument(user, { displayName });
 
-			this.setState({
-				displayName: '',
-				email: '',
-				password: '',
-				confirmPassword: ''
-			});
-		} catch (error) {
-			console.error(error);
-			this.setState({
-				showError: true,
-				errorMsg: error.message
-			});
-		}
+						this.setState({
+							displayName: '',
+							email: '',
+							password: '',
+							confirmPassword: '',
+							loading: false
+						});
+					} catch (error) {
+						console.error(error);
+						this.setState({
+							showError: true,
+							errorMsg: error.message,
+							loading: false
+						});
+					}
+				}, 2000);
+			}
+		);
 	};
 
 	handleChange = event => {
@@ -110,7 +122,18 @@ class SignUp extends React.Component {
 					/>
 					<div className='buttons'>
 						<div className='sign-up-btn'>
-							<CustomButton type='submit'> Sign Up </CustomButton>
+							{this.state.loading ? (
+								<button
+									className='btn btn-dark change-password-btn spinner-btn'
+									disabled
+								>
+									<div className='spinner-border spinner-border' role='status'>
+										<span className='sr-only'>Loading...</span>
+									</div>
+								</button>
+							) : (
+								<CustomButton type='submit'> Sign Up </CustomButton>
+							)}
 						</div>
 					</div>
 				</form>

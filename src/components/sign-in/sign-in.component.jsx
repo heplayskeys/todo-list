@@ -23,7 +23,8 @@ class SignIn extends React.Component {
 			toastType: null,
 			showError: false,
 			errorMsg: '',
-			updatePassword: false
+			updatePassword: false,
+			loading: false
 		};
 	}
 
@@ -57,16 +58,26 @@ class SignIn extends React.Component {
 	handleSubmit = async event => {
 		event.preventDefault();
 
+		if (this.state.loading) {
+			return;
+		}
+
 		const { email, password } = this.state;
 
 		try {
 			await auth.signInWithEmailAndPassword(email, password);
-			this.setState({ email: '', password: '', showError: false });
+			this.setState({
+				email: '',
+				password: '',
+				showError: false,
+				loading: true
+			});
 		} catch (error) {
 			console.log(error);
 			this.setState({
 				showError: true,
-				errorMsg: error.message.slice(0, error.message.indexOf('.') + 1)
+				errorMsg: error.message.slice(0, error.message.indexOf('.') + 1),
+				loading: false
 			});
 		}
 	};
@@ -133,9 +144,20 @@ class SignIn extends React.Component {
 					/>
 					<div className='buttons'>
 						<div className='sign-in-btn'>
-							<CustomButton style={{ width: '45%' }} type='submit'>
-								Sign In
-							</CustomButton>
+							{this.state.loading ? (
+								<button
+									className='btn btn-dark change-password-btn spinner-btn'
+									disabled
+								>
+									<div className='spinner-border spinner-border' role='status'>
+										<span className='sr-only'>Loading...</span>
+									</div>
+								</button>
+							) : (
+								<CustomButton style={{ width: '45%' }} type='submit'>
+									Sign In
+								</CustomButton>
+							)}
 						</div>
 						<div className='google-sign-in-btn'>
 							<CustomButton

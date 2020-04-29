@@ -1,6 +1,7 @@
 .todo-container {
 	display: flex;
 	justify-content: center;
+	padding: 1px 0;
 
 	&:hover {
 		.todo-item {
@@ -12,6 +13,10 @@
 	.todo-item {
 		&.edit-input {
 			background-color: #fff;
+		}
+
+		&.over {
+			border: 1px dashed #000;
 		}
 	}
 
@@ -83,6 +88,28 @@
 		&.editing {
 			background-color: #0062ca;
 			color: #fff;
+		}
+	}
+
+	.reorder-todo {
+		display: flex;
+		align-items: center;
+		margin-left: 5px;
+
+		.material-icons {
+			transition: 0.25s color ease;
+			color: #cc757e2d;
+			font-size: 30px;
+
+			&.over {
+				border: 1px dashed #000;
+				border-radius: 15%;
+			}
+
+			&:hover {
+				cursor: move;
+				color: #cc757d;
+			}
 		}
 	}
 }

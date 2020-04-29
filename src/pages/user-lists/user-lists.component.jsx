@@ -7,7 +7,6 @@ import CustomButton from '../../components/custom-button/custom-button.component
 import FormInput from '../../components/form-input/form-input.component';
 import LoadingSpinner from '../../components/loading-spinner/loading-spinner.component';
 import Toast from '../../components/toast/toast.component';
-// import SearchField from '../../components/search-field/search-field.component';
 
 import shortid from 'shortid';
 
@@ -23,7 +22,9 @@ class UserLists extends React.Component {
 			invitedLists: {},
 			isLoaded: false,
 			toastType: null,
-			listSearch: ''
+			listSearch: '',
+			loading: false,
+			deleting: false
 		};
 	}
 
@@ -57,6 +58,14 @@ class UserLists extends React.Component {
 				});
 			});
 		}
+
+		if (this.state.toastType) {
+			setTimeout(() => {
+				this.setState({
+					toastType: null
+				});
+			}, 4500);
+		}
 	}
 
 	initialize = () => {
@@ -75,69 +84,94 @@ class UserLists extends React.Component {
 				this.setState({
 					todoLists: userLists,
 					invitedLists: invitedUserLists,
-					isLoaded: true
+					isLoaded: true,
+					deleting: false
 				});
 			}, 500);
 		});
 	};
 
-	createTodoList = async () => {
+	createTodoList = () => {
 		if (this.state.listName === '') {
 			return;
 		}
 
-		if (this.props.currentUser) {
-			const { id, userID, todoListIDs, displayName } = this.props.currentUser;
-			const newListID = shortid.generate().substr(0, 4);
-			const listRef = firestore.doc(`todoLists/${newListID}`);
-			const listSnapshot = await listRef.get();
+		this.setState(
+			{
+				loading: true
+			},
+			() => {
+				setTimeout(async () => {
+					if (this.props.currentUser) {
+						const {
+							id,
+							userID,
+							todoListIDs,
+							displayName
+						} = this.props.currentUser;
+						const newListID = shortid.generate().substr(0, 4);
+						const listRef = firestore.doc(`todoLists/${newListID}`);
+						const listSnapshot = await listRef.get();
 
-			if (!listSnapshot.exists) {
-				const createdAt = Date.now();
+						if (!listSnapshot.exists) {
+							const createdAt = Date.now();
 
-				try {
-					listRef.set({
-						id: newListID,
-						adminID: userID,
-						createdBy: displayName,
-						contributorIDs: [id],
-						activeContributors: [],
-						listName: this.state.listName,
-						todos: [],
-						todoFilter: 'all',
-						descending: true,
-						createdAt,
-						lastUpdated: createdAt
-					});
-				} catch (error) {
-					console.error('ERROR: Unable to create todo list', error.message);
-				}
+							try {
+								listRef.set({
+									id: newListID,
+									adminID: userID,
+									createdBy: displayName,
+									contributorIDs: [id],
+									activeContributors: [],
+									listName: this.state.listName,
+									todos: [],
+									todoFilter: 'all',
+									descending: true,
+									createdAt,
+									lastUpdated: createdAt
+								});
+							} catch (error) {
+								console.error(
+									'ERROR: Unable to create todo list',
+									error.message
+								);
+							}
 
-				document.querySelector('#modal-close').click();
+							document.querySelector('#modal-close').click();
 
-				this.getLists().then(listData => {
-					const userLists = listData.filter(
-						list =>
-							this.props.currentUser.todoListIDs.includes(list.id) ||
-							Object.keys(this.props.currentUser.inviteIDs).includes(list.id)
-					);
+							this.getLists().then(listData => {
+								const userLists = listData.filter(
+									list =>
+										this.props.currentUser.todoListIDs.includes(list.id) ||
+										Object.keys(this.props.currentUser.inviteIDs).includes(
+											list.id
+										)
+								);
 
-					userLists.sort((list1, list2) => list2.createdAt - list1.createdAt);
+								userLists.sort(
+									(list1, list2) => list2.createdAt - list1.createdAt
+								);
 
-					const invitedUserLists = { ...this.props.currentUser.inviteIDs };
+								const invitedUserLists = {
+									...this.props.currentUser.inviteIDs
+								};
 
-					this.setState({
-						listName: '',
-						todoLists: userLists,
-						invitedLists: invitedUserLists
-					});
-				});
+								this.setState({
+									listName: '',
+									todoLists: userLists,
+									invitedLists: invitedUserLists,
+									loading: false
+								});
+							});
 
-				this.updateUserTodoIDs(id, newListID, todoListIDs);
+							this.updateUserTodoIDs(id, newListID, todoListIDs);
 
-				return listRef;
+							return listRef;
+						}
+					}
+				}, 1500);
 			}
-		}
+		);
 	};
 
 	getLists = async () => {
@@ -197,7 +231,6 @@ class UserLists extends React.Component {
 
 		if (event.key === 'Enter') {
 			this.createTodoList();
-			document.querySelector('#modal-close').click();
 		}
 	};
 
@@ -237,6 +270,41 @@ class UserLists extends React.Component {
 		});
 	};
 
+	handleDelete = event => {
+		let parentEl = document.querySelector(`div[id="${event.target.id}"]`);
+		parentEl.classList.add('deleting');
+		event.target.classList.add('deleting');
+		try {
+			firestore
+				.doc(`todoLists/${event.target.id}`)
+				.delete()
+				.then(() => {
+					setTimeout(() => {
+						this.setState(
+							{
+								toastType: 'listDeleted',
+								deleting: true
+							},
+							() => {
+								setTimeout(() => {
+									this.initialize();
+								}, 3000);
+							}
+						);
+					}, 2500);
+				});
+		} catch (error) {
+			this.setState({
+				toastType: 'errorDeletingList',
+				deleting: false
+			});
+			parentEl.classList.remove('deleting');
+			event.target.classList.remove('deleting');
+			console.error('ERROR: Unable to delete todo list.');
+			console.error(error.message);
+		}
+	};
+
 	updateContributors = async listID => {
 		const { id } = this.props.currentUser;
 		const listPageRef = firestore.doc(`todoLists/${listID}`);
@@ -261,15 +329,19 @@ class UserLists extends React.Component {
 				.toLowerCase()
 				.includes(this.state.listSearch.toLocaleLowerCase()) ? (
 				<div key={list.id} id={list.id} className='todo-list-div'>
-					<div>
+					<div className='todo-lists-container'>
 						<Link
 							listid={list.id}
-							to={{
-								pathname: Object.keys(invitedLists).includes(list.id)
-									? `${match.url}`
-									: `${match.url}/todo-list/${list.id}`,
-								state: { ...list }
-							}}
+							to={
+								this.state.deleting
+									? '#'
+									: {
+											pathname: Object.keys(invitedLists).includes(list.id)
+												? `${match.url}`
+												: `${match.url}/todo-list/${list.id}`,
+											state: { ...list }
+									  }
+							}
 							className={
 								Object.keys(invitedLists).includes(list.id) ? 'invited' : ''
 							}
@@ -296,9 +368,21 @@ class UserLists extends React.Component {
 							</div>
 						) : null}
 					</div>
-					<div className='list-details'>{`Created by ${
-						list.createdBy
-					} on ${new Date(list.createdAt).toLocaleDateString()}`}</div>
+					<div className='list-details'>
+						{`Created by ${list.createdBy} on ${new Date(
+							list.createdAt
+						).toLocaleDateString()}`}
+						{this.props.currentUser &&
+						this.props.currentUser.userID === list.adminID ? (
+							<i
+								id={list.id}
+								className='material-icons delete-todo-list'
+								onClick={this.state.deleting ? null : this.handleDelete}
+							>
+								delete
+							</i>
+						) : null}
+					</div>
 				</div>
 			) : null;
 		});
@@ -347,6 +431,11 @@ class UserLists extends React.Component {
 								() => document.querySelector('#newListName').focus(),
 								500
 							)
+						}
+						style={
+							this.state.toastType
+								? { opacity: 0.1 }
+								: { transition: 'opacity 1s', opacity: 1 }
 						}
 					>
 						Add New Todo List
@@ -402,13 +491,29 @@ class UserLists extends React.Component {
 									>
 										Cancel
 									</button>
-									<button
-										type='button'
-										className='btn btn-dark'
-										onClick={() => this.createTodoList()}
-									>
-										Create
-									</button>
+									{this.state.loading ? (
+										<button
+											className='btn btn-dark change-password-btn spinner-btn'
+											disabled
+										>
+											<div
+												className='spinner-border spinner-border'
+												role='status'
+											>
+												<span className='sr-only'>Loading...</span>
+											</div>
+										</button>
+									) : (
+										<button
+											type='button'
+											className='btn btn-dark'
+											onClick={
+												this.state.loading ? null : () => this.createTodoList()
+											}
+										>
+											Create
+										</button>
+									)}
 								</div>
 							</div>
 						</div>

@@ -24,7 +24,7 @@ class TodoForm extends React.Component {
 		event.preventDefault();
 		// Submit Form
 		if (this.state.text === '') {
-			// TODO: Empty Input Field Error Handling Here
+			// TODO: Empty Input Field Error Handling Here?
 			return;
 		}
 

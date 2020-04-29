@@ -36,16 +36,18 @@ class TodoListPage extends React.Component {
 		this.unsubscribeFromList = null;
 	}
 
+	dragSrcIndex = null;
+
 	componentDidMount() {
 		this.fetchListData();
 
 		if (!this.props.currentUser) {
 			if (this.props.match.url === '/') {
-				setTimeout(() => {
-					this.setState({
-						isLoaded: true
-					});
-				}, 1000);
+				// setTimeout(() => {
+				this.setState({
+					isLoaded: true
+				});
+				// }, 1000);
 			}
 		}
 	}
@@ -96,7 +98,9 @@ class TodoListPage extends React.Component {
 			return;
 		}
 
-		this.unsubscribeFromList();
+		if (this.props.currentUser) {
+			this.unsubscribeFromList();
+		}
 	}
 
 	fetchListData = () => {
@@ -205,8 +209,6 @@ class TodoListPage extends React.Component {
 			descending: !state.descending,
 			todos: state.todos.reverse()
 		}));
-
-		this.updateDB();
 	};
 
 	toggleComplete = id => {
@@ -248,6 +250,12 @@ class TodoListPage extends React.Component {
 		const todoListRef = firestore.doc(`todoLists/${id}`);
 		const todoListSnapshot = await todoListRef.get();
 
+		if (!todoListSnapshot.exists) {
+			alert('List has been deleted.');
+			this.renderRedirect();
+			return;
+		}
+
 		let todoIDs = [];
 		const updatedTodos = this.state.todos;
 
@@ -266,24 +274,100 @@ class TodoListPage extends React.Component {
 			});
 		}
 
-		if (todoListSnapshot.exists) {
-			try {
-				const { descending, listName, todoFilter } = this.state;
-				const updatedAt = Date.now();
-				todoListRef.update({
-					descending,
-					listName,
-					todoFilter,
-					todos: updatedTodos.map(todo => todo),
-					lastUpdated: updatedAt
-				});
-			} catch (error) {
-				console.log('Error deleting todo', error.message);
-			}
+		try {
+			const { descending, listName, todoFilter } = this.state;
+			const updatedAt = Date.now();
+			todoListRef.update({
+				descending,
+				listName,
+				todoFilter,
+				todos: updatedTodos.map(todo => todo),
+				lastUpdated: updatedAt
+			});
+		} catch (error) {
+			console.log('Error deleting todo', error.message);
 		}
 	};
 
+	handleDragStart = event => {
+		if (this.state.updating) {
+			return;
+		}
+
+		event.currentTarget.style.opacity = '0.4';
+		this.dragSrcIndex = event.currentTarget.id;
+
+		event.dataTransfer.effectAllowed = 'move';
+	};
+
+	handleDragOver = event => {
+		event.stopPropagation();
+		event.preventDefault();
+
+		event.dataTransfer.dropEffect = 'move';
+
+		return false;
+	};
+
+	handleDragEnter = event => {
+		event.stopPropagation();
+		event.preventDefault();
+
+		console.log(event.currentTarget);
+
+		if (event.target.classList[0].includes('material-icons')) {
+			event.target.classList.add('over');
+		}
+	};
+
+	handleDragLeave = event => {
+		event.stopPropagation();
+		event.preventDefault();
+
+		event.target.classList.remove('over');
+	};
+
+	handleDrop = event => {
+		event.stopPropagation();
+		event.preventDefault();
+
+		if (this.dragSrcIndex !== event.currentTarget.id) {
+			let updateTodos = this.state.todos;
+			let temp = updateTodos[this.dragSrcIndex];
+			updateTodos[this.dragSrcIndex] = updateTodos[event.currentTarget.id];
+			updateTodos[event.currentTarget.id] = temp;
+
+			this.setState({
+				todos: updateTodos
+			});
+		}
+
+		return false;
+	};
+
+	handleDragEnd = event => {
+		event.stopPropagation();
+		event.preventDefault();
+
+		event.currentTarget.style.opacity = 1;
+		document.querySelectorAll('.material-icons').forEach(icon => {
+			icon.classList.remove('over');
+		});
+	};
+
 	render() {
+		console.log(this.state.todos);
+		const todoContainers = document.querySelectorAll('.todo-container');
+
+		[].forEach.call(todoContainers, container => {
+			container.addEventListener('dragstart', this.handleDragStart, false);
+			container.addEventListener('dragenter', this.handleDragEnter, false);
+			container.addEventListener('dragover', this.handleDragOver, false);
+			container.addEventListener('dragleave', this.handleDragLeave, false);
+			container.addEventListener('drop', this.handleDrop, false);
+			container.addEventListener('dragend', this.handleDragEnd, false);
+		});
+
 		let todos = [];
 		let clearTodosBtn = this.state.todos.some(todo => todo.complete) ? (
 			<button className='dropdown-item' onClick={this.deleteCompleteTodos}>
@@ -363,90 +447,99 @@ class TodoListPage extends React.Component {
 		return !this.state.isLoaded ? (
 			<LoadingSpinner message='todoList' />
 		) : (
-			<div>
-				<div className='list-page-container'>
-					{this.props.currentUser ? (
-						<div
-							className='contributor-count'
-							data-tip='Currently Active Users'
-						>
-							{this.state.activeContributors.length}
-							<ReactTooltip place='left' />
-						</div>
-					) : null}
-					<ListTitle
-						listID={this.state.id}
-						listName={this.state.listName}
-						listAdmin={this.state.adminID}
-						handleListName={this.handleListName}
-					/>
-					<TodoForm onSubmit={this.addTodo} />
-					<div className='filter-buttons'>
-						<div>
-							<span>Show:</span>
-							<div className='btn-group'>
-								<button
-									className={`btn btn-sm ${
-										this.state.todoFilter === 'all'
-											? 'btn-secondary'
-											: 'btn-outline-secondary'
-									}`}
-									name='all'
-									onClick={this.filterTodos}
-								>
-									All
-								</button>
-								<button
-									className={`btn btn-sm ${
-										this.state.todoFilter === 'active'
-											? 'btn-secondary'
-											: 'btn-outline-secondary'
-									}`}
-									name='active'
-									onClick={this.filterTodos}
-								>
-									Active
-								</button>
-								<button
-									className={`btn btn-sm ${
-										this.state.todoFilter === 'completed'
-											? 'btn-secondary'
-											: 'btn-outline-secondary'
-									}`}
-									name='completed'
-									onClick={this.filterTodos}
-								>
-									Completed
-								</button>
-							</div>
-						</div>
-						<div className='bulk-actions bulk-actions-dropdown'>
-							{bulkActionsDropdown}
-						</div>
-						<div className='form-inline my-2 my-lg-0 search-input'>
-							<input
-								className='form-control mr-sm-2'
-								type='search'
-								placeholder='Search Lists'
-								aria-label='Search'
-								onChange={event => {
-									event.preventDefault();
-									this.setState({
-										todoSearch: event.target.value
-									});
-								}}
-							/>
-							<i className='material-icons mag-glass'>search</i>
+			<div className='list-page-container'>
+				{this.props.currentUser ? (
+					<div className='contributor-count' data-tip='Currently Active Users'>
+						{this.state.activeContributors.length}
+						<ReactTooltip place='left' />
+					</div>
+				) : null}
+				<ListTitle
+					listID={this.state.id}
+					listName={this.state.listName}
+					listAdmin={this.state.adminID}
+					handleListName={this.handleListName}
+				/>
+				<TodoForm onSubmit={this.addTodo} />
+				<div className='filter-buttons'>
+					<div>
+						<span>Show:</span>
+						<div className='btn-group'>
+							<button
+								className={`btn btn-sm ${
+									this.state.todoFilter === 'all'
+										? 'btn-secondary'
+										: 'btn-outline-secondary'
+								}`}
+								name='all'
+								onClick={this.filterTodos}
+							>
+								All
+							</button>
+							<button
+								className={`btn btn-sm ${
+									this.state.todoFilter === 'active'
+										? 'btn-secondary'
+										: 'btn-outline-secondary'
+								}`}
+								name='active'
+								onClick={this.filterTodos}
+							>
+								Active
+							</button>
+							<button
+								className={`btn btn-sm ${
+									this.state.todoFilter === 'completed'
+										? 'btn-secondary'
+										: 'btn-outline-secondary'
+								}`}
+								name='completed'
+								onClick={this.filterTodos}
+							>
+								Completed
+							</button>
 						</div>
 					</div>
-					<div className='todo-list-container'>
-						{todos.map(todo => {
-							return todo.text
-								.toLowerCase()
-								.includes(this.state.todoSearch.toLowerCase()) ? (
+					<div className='bulk-actions bulk-actions-dropdown'>
+						{bulkActionsDropdown}
+					</div>
+					<div className='form-inline my-2 my-lg-0 search-input'>
+						<input
+							className='form-control mr-sm-2'
+							type='search'
+							placeholder='Search Lists'
+							aria-label='Search'
+							onChange={event => {
+								event.preventDefault();
+								this.setState({
+									todoSearch: event.target.value
+								});
+							}}
+						/>
+						<i className='material-icons mag-glass'>search</i>
+					</div>
+				</div>
+				<div className='todo-list-container'>
+					{todos.map((todo, index) => {
+						return todo.text
+							.toLowerCase()
+							.includes(this.state.todoSearch.toLowerCase()) ? (
+							<div
+								id={index}
+								key={index}
+								className='single-todo-container'
+								draggable='true'
+								onDragStart={this.handleDragStart}
+								onDragOver={this.handleDragOver}
+								onDragEnter={this.handleDragEnter}
+								onDragLeave={this.handleDragLeave}
+								onDragEnd={this.handleDragEnd}
+								onDrop={this.handleDrop}
+								updating={this.state.updating}
+							>
 								<Todo
 									key={todo.id}
-									id={todo.id}
+									todoId={todo.id}
 									deleteTodo={() =>
 										this.deleteTodo(todo.id, todo.contributorID)
 									}
@@ -457,59 +550,57 @@ class TodoListPage extends React.Component {
 									listID={this.state.id}
 									setTodo={this.setTodo}
 									textValue={todo.text}
+									index={index}
 								/>
-							) : null;
-						})}
-					</div>
-					<div
-						className='more-todos'
-						style={
-							todos.length > 6 ? { display: 'block' } : { display: 'none' }
-						}
-					>
-						<span
-							role='img'
-							aria-label='additional-items'
-							aria-labelledby='additional-items'
-						>
-							&#9899;
-						</span>
-					</div>
-					<div className='active-todos'>
-						Still Todos:{' '}
-						{this.state.todos.filter(todo => !todo.complete).length}
-						{this.props.currentUser ? (
-							this.props.currentUser.userID === this.state.adminID ? (
-								<div className='list-extras'>
-									<CustomButton
-										className='invite-btn btn btn-outline-dark'
-										data-toggle='modal'
-										data-target='#inviteUser'
-										onClick={() =>
-											setTimeout(
-												() => document.querySelector('#userEmail').focus(),
-												500
-											)
-										}
-									>
-										Invite to List
-									</CustomButton>
-									<InviteModal
-										handleInvite={this.handleInvite}
-										todoListID={this.state.id}
-										adminID={this.state.adminID}
-									/>
-								</div>
-							) : null
-						) : (
-							<div className='list-extras'>
-								<Link className='sign-btn btn btn-outline-dark' to='/signin'>
-									Sign Up
-								</Link>
-								<span>* Sign Up to Save Your Lists</span>
 							</div>
-						)}
-					</div>
+						) : null;
+					})}
+				</div>
+				<div
+					className='more-todos'
+					style={todos.length > 6 ? { display: 'block' } : { display: 'none' }}
+				>
+					<span
+						role='img'
+						aria-label='additional-items'
+						aria-labelledby='additional-items'
+					>
+						&#9899;
+					</span>
+				</div>
+				<div className='active-todos'>
+					Still Todos: {this.state.todos.filter(todo => !todo.complete).length}
+					{this.props.currentUser ? (
+						this.props.currentUser.userID === this.state.adminID ? (
+							<div className='list-extras'>
+								<CustomButton
+									className='invite-btn btn btn-outline-dark'
+									data-toggle='modal'
+									data-target='#inviteUser'
+									onClick={() =>
+										setTimeout(
+											() => document.querySelector('#userEmail').focus(),
+											500
+										)
+									}
+								>
+									Invite to List
+								</CustomButton>
+								<InviteModal
+									handleInvite={this.handleInvite}
+									todoListID={this.state.id}
+									adminID={this.state.adminID}
+								/>
+							</div>
+						) : null
+					) : (
+						<div className='list-extras'>
+							<Link className='sign-btn btn btn-outline-dark' to='/signin'>
+								Sign Up
+							</Link>
+							<span>* Sign Up to Save Your Lists</span>
+						</div>
+					)}
 				</div>
 				<div className='toast-container'>
 					{this.state.toastType !== null ? (

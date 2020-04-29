@@ -51,25 +51,6 @@ firebase.initializeApp(config);
 export const auth = firebase.auth();
 export const firestore = firebase.firestore();
 
-// export const emailPasswordReset = async userEmail => {
-// 	const actionCodeSettings = {
-// 		// url: 'http://localhost:3000/signin',
-// 		url: 'http://localhost:3000/reset-password?email=' + userEmail,
-// 		handleCodeInApp: true
-// 		// dynamicLinkDomain: 'http://localhost/reset-password'
-// 	};
-
-// 	auth
-// 		.sendPasswordResetEmail(userEmail, actionCodeSettings)
-// 		.then(() => {
-// 			console.log('SUCCESS: Password reset email sent.');
-// 		})
-// 		.catch(error => {
-// 			console.error('ERROR: Unable to send password reset email.');
-// 			console.error(error.message);
-// 		});
-// };
-
 export const signInViaEmail = async userEmail => {
 	const actionCodeSettings = {
 		url: 'http://localhost:3000/signin?email=' + userEmail,

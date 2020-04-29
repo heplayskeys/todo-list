@@ -2,8 +2,7 @@ import React from 'react';
 import { Switch, Route, Redirect } from 'react-router-dom';
 import { auth, createUserProfileDocument } from './firebase/firebase.utils';
 import { connect } from 'react-redux';
-
-import './App.css';
+import { setCurrentUser } from './redux/user/user.actions';
 
 import Header from '../src/components/header/header.component';
 import TodoListPage from './pages/todo-list/todo-list.component';
@@ -12,7 +11,9 @@ import SignInAndSignUpPage from './pages/sign-in-and-sign-up/sign-in-and-sign-up
 import UserLists from './pages/user-lists/user-lists.component';
 import ResetPassword from './pages/reset-password/reset-password.component';
 import SignOut from './pages/sign-out/sign-out.component';
-import { setCurrentUser } from './redux/user/user.actions';
+import Contact from './pages/contact/contact.component';
+
+import './App.css';
 
 class App extends React.Component {
 	unsubscribeFromAuth = null;
@@ -75,6 +76,7 @@ class App extends React.Component {
 					/>
 					<Route exact path='/user/:userID/profile' component={Profile} />
 					<Route exact path='/user/:userID/todo-lists' component={UserLists} />
+					<Route exact path='/contact' component={Contact} />
 					<Route
 						exact
 						path='/user/:userID/todo-lists/todo-list/:todoListID'

@@ -5,19 +5,19 @@ import './todo.styles.scss';
 
 const Todo = props => {
 	const {
-		todo: { id, text, complete },
+		todo: { todoId, text, complete },
 		adminID,
 		contributorID,
 		toggleComplete,
 		deleteTodo,
 		setTodo,
-		textValue
+		textValue,
+		index
 	} = props;
 
 	const [state, setState] = useState({
 		editMode: false,
-		text: text,
-		inputSelect: true
+		text: text
 	});
 
 	const handleChange = event => {
@@ -48,11 +48,11 @@ const Todo = props => {
 	};
 
 	return (
-		<div className='todo-container input-group mb-3'>
+		<div id={index} className='todo-container input-group mb-3'>
 			<div className='input-group-prepend'>
 				<div className='input-group-text'>
 					<input
-						id={id}
+						id={todoId}
 						type='checkbox'
 						checked={complete}
 						onChange={state.editMode ? null : toggleComplete}
@@ -70,7 +70,7 @@ const Todo = props => {
 			>
 				{state.editMode ? (
 					<input
-						id={`${id}-input`}
+						id={`${todoId}-input`}
 						type='text'
 						className='edit-input-field'
 						value={state.text}
@@ -126,13 +126,18 @@ const Todo = props => {
 				onClick={deleteTodo}
 				disabled={
 					props.currentUser
-						? props.currentUser.userID !== adminID ||
-						  props.currentUser.userID !== contributorID
+						? props.currentUser.userID === contributorID ||
+						  props.currentUser.userID === adminID
+							? false
+							: true
 						: false
 				}
 			>
 				<i className='material-icons'>delete</i>
 			</button>
+			<div id={index} className='reorder-todo'>
+				<i className='material-icons'>reorder</i>
+			</div>
 		</div>
 	);
 };
