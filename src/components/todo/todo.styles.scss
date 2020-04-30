@@ -107,8 +107,12 @@
 			}
 
 			&:hover {
-				cursor: move;
+				cursor: grab;
 				color: #cc757d;
+			}
+
+			&:active {
+				cursor: grabbing;
 			}
 		}
 	}

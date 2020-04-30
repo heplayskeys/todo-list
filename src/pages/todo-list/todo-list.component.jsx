@@ -357,8 +357,6 @@ class TodoListPage extends React.Component {
 		event.stopPropagation();
 		event.preventDefault();
 
-		console.log(event.currentTarget);
-
 		if (event.target.classList[0].includes('material-icons')) {
 			event.target.classList.add('over');
 		}
@@ -400,7 +398,6 @@ class TodoListPage extends React.Component {
 	};
 
 	render() {
-		console.log(this.state.todos);
 		const todoContainers = document.querySelectorAll('.todo-container');
 
 		[].forEach.call(todoContainers, container => {

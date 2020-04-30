@@ -136,7 +136,7 @@ const Todo = props => {
 				<i className='material-icons'>delete</i>
 			</button>
 			<div id={index} className='reorder-todo'>
-				<i className='material-icons'>reorder</i>
+				<i className='material-icons'>drag_indicator</i>
 			</div>
 		</div>
 	);
