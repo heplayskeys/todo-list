@@ -97,12 +97,18 @@ class TodoListPage extends React.Component {
 				);
 			}
 
-			localStorage.setItem(
-				`${this.props.match.params.todoListID}`,
-				JSON.stringify({
-					todoState: this.state.todos
-				})
-			);
+			if (
+				JSON.parse(
+					localStorage.getItem(`${this.props.match.params.todoListID}`)
+				).todoState.length !== this.state.todos.length
+			) {
+				localStorage.setItem(
+					`${this.props.match.params.todoListID}`,
+					JSON.stringify({
+						todoState: this.state.todos
+					})
+				);
+			}
 		}
 	}
 
@@ -462,8 +468,6 @@ class TodoListPage extends React.Component {
 		if (this.dragSrcIndex !== event.currentTarget.id) {
 			let updateTodos = this.state.todos;
 			let movedTodo = updateTodos.splice(this.dragSrcIndex, 1)[0];
-
-			console.log(event.currentTarget.id);
 
 			if (event.currentTarget.id === 0) {
 				updateTodos.unshift(movedTodo);
