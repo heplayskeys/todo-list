@@ -64,6 +64,9 @@ class TodoListPage extends React.Component {
 				this.renderRedirect();
 				return;
 			} else if (!this.state.loggedIn && !this.state.isLoaded) {
+				// if (sessionStorage.getItem('listData')) {
+				// 	let previouslySortedTodos = this.resortTodos();
+				// }
 				this.setState(
 					{
 						loggedIn: true,
@@ -86,7 +89,11 @@ class TodoListPage extends React.Component {
 							.then(() => {
 								this.setState({
 									activeContributors: activeUsers,
-									todos: listSnap.data().allTodos
+									todos: localStorage.getItem(
+										`${this.props.match.params.todoListID}`
+									)
+										? this.resortTodos()
+										: listSnap.data().allTodos
 								});
 							});
 					}
@@ -99,6 +106,13 @@ class TodoListPage extends React.Component {
 		if (!this.state.loggedIn || !this.props.currentUser) {
 			return;
 		}
+
+		localStorage.setItem(
+			`${this.props.match.params.todoListID}`,
+			JSON.stringify({
+				todoState: this.state.todos
+			})
+		);
 
 		if (this.props.currentUser) {
 			this.unsubscribeFromList();
@@ -173,6 +187,13 @@ class TodoListPage extends React.Component {
 
 	renderRedirect = () => {
 		document.querySelector('#home').click();
+	};
+
+	resortTodos = () => {
+		let previousSort = JSON.parse(
+			localStorage.getItem(`${this.props.match.params.todoListID}`)
+		);
+		return previousSort.todoState;
 	};
 
 	setTodo = (updateTodo, text) => {
@@ -292,6 +313,12 @@ class TodoListPage extends React.Component {
 		}));
 	};
 
+	resetSort = () => {
+		this.setState({
+			todos: this.state.allTodos
+		});
+	};
+
 	toggleComplete = id => {
 		this.setState(state => ({
 			allTodos: state.allTodos.map(todo => {
@@ -364,14 +391,23 @@ class TodoListPage extends React.Component {
 		try {
 			const { descending, listName, todoFilter, allTodos } = this.state;
 			const updatedAt = Date.now();
-			todoListRef.update({
-				allTodos,
-				descending,
-				listName,
-				todoFilter,
-				todos: updatedTodos.map(todo => todo),
-				lastUpdated: updatedAt
-			});
+			todoListRef
+				.update({
+					allTodos,
+					descending,
+					listName,
+					todoFilter,
+					todos: updatedTodos.map(todo => todo),
+					lastUpdated: updatedAt
+				})
+				.then(() => {
+					localStorage.setItem(
+						`${this.props.match.params.todoListID}`,
+						JSON.stringify({
+							todoState: this.state.todos
+						})
+					);
+				});
 		} catch (error) {
 			console.log('Error deleting todo', error.message);
 		}
@@ -435,9 +471,19 @@ class TodoListPage extends React.Component {
 				updateTodos.splice(event.currentTarget.id, 0, movedTodo);
 			}
 
-			this.setState({
-				todos: updateTodos
-			});
+			this.setState(
+				{
+					todos: updateTodos
+				},
+				() => {
+					localStorage.setItem(
+						`${this.props.match.params.todoListID}`,
+						JSON.stringify({
+							todoState: this.state.todos
+						})
+					);
+				}
+			);
 		}
 
 		return false;
@@ -496,8 +542,14 @@ class TodoListPage extends React.Component {
 			</button>
 		);
 
+		let resetSort = (
+			<button className='dropdown-item' onClick={this.resetSort}>
+				Reset Sort
+			</button>
+		);
+
 		let reverseSort = (
-			<button className='dropdown-item' onClick={() => this.reverseSortTodos()}>
+			<button className='dropdown-item' onClick={this.reverseSortTodos}>
 				Reverse Sort
 				{this.state.descending ? (
 					<span id='sort-arrow'>&#8673;</span>
@@ -521,6 +573,7 @@ class TodoListPage extends React.Component {
 				</button>
 				<div className='dropdown-menu' aria-labelledby='btnGroupDrop1'>
 					{reverseSort}
+					{resetSort}
 					{allComplete}
 					{allActive}
 					{clearTodosBtn}

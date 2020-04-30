@@ -124,6 +124,7 @@ class UserLists extends React.Component {
 									contributorIDs: [id],
 									activeContributors: [],
 									listName: this.state.listName,
+									allTodos: [],
 									todos: [],
 									todoFilter: 'all',
 									descending: true,
