@@ -109,9 +109,43 @@ class TodoListPage extends React.Component {
 				.collection('todoLists')
 				.doc(`${this.props.location.state.id}`)
 				.onSnapshot(doc => {
-					this.setState({
-						...doc.data()
-					});
+					if (this.state.todos.length < doc.data().todos.length) {
+						this.setState({
+							...doc.data(),
+							todos: [doc.data().todos[0], ...this.state.todos]
+						});
+					} else if (this.state.todos.length > doc.data().todos.length) {
+						let currentTodos = this.state.todos;
+						let updatedTodosIDs = [];
+
+						doc.data().todos.forEach(todo => {
+							updatedTodosIDs.push(todo.id);
+						});
+
+						let updatedTodos = currentTodos.filter(todo => {
+							return updatedTodosIDs.includes(todo.id);
+						});
+						this.setState({
+							...doc.data(),
+							todos: updatedTodos
+						});
+					} else {
+						let currentTodos = this.state.todos;
+						let updatedTodos = [];
+
+						currentTodos.forEach(todo => {
+							for (let i = 0; i < currentTodos.length; i++) {
+								if (todo.id === doc.data().todos[i].id) {
+									updatedTodos.push(doc.data().todos[i]);
+									break;
+								}
+							}
+						});
+						this.setState({
+							...doc.data(),
+							todos: updatedTodos
+						});
+					}
 				});
 		}
 	};

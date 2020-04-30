@@ -49,8 +49,10 @@ class ListTitle extends React.Component {
 			return;
 		}
 
-		if (this.props.currentUser.userID !== this.props.listAdmin) {
-			return;
+		if (this.props.currentUser) {
+			if (this.props.currentUser.userID !== this.props.listAdmin) {
+				return;
+			}
 		}
 
 		this.setState(state => ({
