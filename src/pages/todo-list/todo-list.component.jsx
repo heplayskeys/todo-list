@@ -110,9 +110,12 @@ class TodoListPage extends React.Component {
 				.doc(`${this.props.location.state.id}`)
 				.onSnapshot(doc => {
 					if (this.state.todos.length < doc.data().todos.length) {
+						let updatedTodos = this.state.descending
+							? [doc.data().todos[0], ...this.state.todos]
+							: [...this.state.todos, doc.data().todos[0]];
 						this.setState({
 							...doc.data(),
-							todos: [doc.data().todos[0], ...this.state.todos]
+							todos: updatedTodos
 						});
 					} else if (this.state.todos.length > doc.data().todos.length) {
 						let currentTodos = this.state.todos;
