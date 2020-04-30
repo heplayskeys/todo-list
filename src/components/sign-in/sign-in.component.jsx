@@ -92,6 +92,8 @@ class SignIn extends React.Component {
 		event.preventDefault();
 		const { name } = event.target;
 
+		console.log('hello');
+
 		switch (name) {
 			case 'send-email':
 				await signInViaEmail(this.state.email);
@@ -116,6 +118,12 @@ class SignIn extends React.Component {
 			default:
 				console.error('ERROR: Uh oh! Something went wrong. Please try again.');
 				return;
+		}
+	};
+
+	keyPressHandler = event => {
+		if (event.key === 'Enter') {
+			this.handleClick(event);
 		}
 	};
 

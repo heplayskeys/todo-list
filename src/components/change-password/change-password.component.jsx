@@ -181,6 +181,7 @@ class ChangePassword extends React.Component {
 					/>
 
 					<FormInput
+						id='newPassword'
 						name='newPassword'
 						type='password'
 						value={newPassword}
@@ -191,6 +192,7 @@ class ChangePassword extends React.Component {
 					/>
 
 					<FormInput
+						id='confirmNewPassword'
 						name='confirmNewPassword'
 						type='password'
 						value={confirmNewPassword}
