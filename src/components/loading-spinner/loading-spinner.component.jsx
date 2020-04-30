@@ -34,7 +34,7 @@ class LoadingSpinner extends React.Component {
 						<span className='sr-only'>Loading...</span>
 					</div>
 				</div>
-				<Link id='reset' to='/todo-list' />
+				<Link id='reset' to='/' />
 			</div>
 		);
 	}

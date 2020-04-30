@@ -42,7 +42,7 @@ class TodoListPage extends React.Component {
 		this.fetchListData();
 
 		if (!this.props.currentUser) {
-			if (this.props.match.url === '/todo-list') {
+			if (this.props.match.url === '/') {
 				setTimeout(() => {
 					this.setState({
 						isLoaded: true
