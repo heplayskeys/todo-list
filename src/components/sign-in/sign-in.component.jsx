@@ -92,8 +92,6 @@ class SignIn extends React.Component {
 		event.preventDefault();
 		const { name } = event.target;
 
-		console.log('hello');
-
 		switch (name) {
 			case 'send-email':
 				await signInViaEmail(this.state.email);
