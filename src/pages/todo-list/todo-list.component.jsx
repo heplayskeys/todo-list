@@ -64,9 +64,6 @@ class TodoListPage extends React.Component {
 				this.renderRedirect();
 				return;
 			} else if (!this.state.loggedIn && !this.state.isLoaded) {
-				// if (sessionStorage.getItem('listData')) {
-				// 	let previouslySortedTodos = this.resortTodos();
-				// }
 				this.setState(
 					{
 						loggedIn: true,
@@ -99,6 +96,13 @@ class TodoListPage extends React.Component {
 					}
 				);
 			}
+
+			localStorage.setItem(
+				`${this.props.match.params.todoListID}`,
+				JSON.stringify({
+					todoState: this.state.todos
+				})
+			);
 		}
 	}
 
