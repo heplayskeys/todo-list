@@ -88,7 +88,7 @@ class App extends React.Component {
 						path='/reset-password/:userEmail'
 						component={ResetPassword}
 					/>
-					<Route path='/' component={TodoListPage} />
+					<Route path='/todo-list' component={TodoListPage} />
 					/>
 				</Switch>
 			</div>
