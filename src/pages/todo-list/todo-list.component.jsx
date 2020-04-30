@@ -33,7 +33,7 @@ class TodoListPage extends React.Component {
 			todoSearch: ''
 		};
 
-		this.unsubscribeFromList = () => null;
+		this.unsubscribeFromList = null;
 	}
 
 	dragSrcIndex = null;
@@ -94,7 +94,7 @@ class TodoListPage extends React.Component {
 	}
 
 	componentWillUnmount() {
-		if (this.state.loggedIn || !this.props.currentUser) {
+		if (!this.state.loggedIn || !this.props.currentUser) {
 			return;
 		}
 
@@ -109,6 +109,11 @@ class TodoListPage extends React.Component {
 				.collection('todoLists')
 				.doc(`${this.props.location.state.id}`)
 				.onSnapshot(doc => {
+					if (this.state.todos === undefined || !doc.data()) {
+						this.renderRedirect();
+						return;
+					}
+
 					if (!this.state.todos.length) {
 						this.setState({
 							...doc.data()
@@ -157,6 +162,8 @@ class TodoListPage extends React.Component {
 						});
 					}
 				});
+		} else {
+			return;
 		}
 	};
 
@@ -164,7 +171,7 @@ class TodoListPage extends React.Component {
 		document.querySelector('#home').click();
 	};
 
-	setTodo = async (updateTodo, text) => {
+	setTodo = (updateTodo, text) => {
 		const updatedTodos = this.state.todos.map(todo => {
 			if (todo.id === updateTodo.id) {
 				return {
@@ -331,6 +338,8 @@ class TodoListPage extends React.Component {
 		} catch (error) {
 			console.log('Error deleting todo', error.message);
 		}
+
+		return;
 	};
 
 	handleDragStart = event => {
@@ -375,9 +384,20 @@ class TodoListPage extends React.Component {
 
 		if (this.dragSrcIndex !== event.currentTarget.id) {
 			let updateTodos = this.state.todos;
-			let temp = updateTodos[this.dragSrcIndex];
-			updateTodos[this.dragSrcIndex] = updateTodos[event.currentTarget.id];
-			updateTodos[event.currentTarget.id] = temp;
+			let movedTodo = updateTodos.splice(this.dragSrcIndex, 1)[0];
+
+			console.log(event.currentTarget.id);
+
+			if (event.currentTarget.id === 0) {
+				updateTodos.unshift(movedTodo);
+			}
+
+			if (event.currentTarget.id === `${this.state.todos.length}`) {
+				console.log('hello');
+				updateTodos.push(movedTodo);
+			} else {
+				updateTodos.splice(event.currentTarget.id, 0, movedTodo);
+			}
 
 			this.setState({
 				todos: updateTodos
