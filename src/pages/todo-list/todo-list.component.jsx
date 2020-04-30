@@ -67,7 +67,8 @@ class TodoListPage extends React.Component {
 				this.setState(
 					{
 						loggedIn: true,
-						isLoaded: true
+						isLoaded: true,
+						allTodos: this.state.todos
 					},
 					async () => {
 						const listRef = firestore.doc(`todoLists/${this.state.id}`);
@@ -84,7 +85,8 @@ class TodoListPage extends React.Component {
 							})
 							.then(() => {
 								this.setState({
-									activeContributors: activeUsers
+									activeContributors: activeUsers,
+									todos: listSnap.data().allTodos
 								});
 							});
 					}
@@ -93,7 +95,7 @@ class TodoListPage extends React.Component {
 		}
 	}
 
-	componentWillUnmount() {
+	async componentWillUnmount() {
 		if (!this.state.loggedIn || !this.props.currentUser) {
 			return;
 		}
@@ -125,6 +127,7 @@ class TodoListPage extends React.Component {
 						let updatedTodos = this.state.descending
 							? [doc.data().todos[0], ...this.state.todos]
 							: [...this.state.todos, doc.data().todos[0]];
+
 						this.setState({
 							...doc.data(),
 							todos: updatedTodos
@@ -140,22 +143,23 @@ class TodoListPage extends React.Component {
 						let updatedTodos = currentTodos.filter(todo => {
 							return updatedTodosIDs.includes(todo.id);
 						});
+
 						this.setState({
 							...doc.data(),
 							todos: updatedTodos
 						});
 					} else if (this.state.todos.length === doc.data().todos.length) {
-						let currentTodos = this.state.todos;
 						let updatedTodos = [];
 
-						currentTodos.forEach(todo => {
-							for (let i = 0; i < currentTodos.length; i++) {
+						this.state.todos.forEach(todo => {
+							for (let i = 0; i < this.state.todos.length; i++) {
 								if (todo.id === doc.data().todos[i].id) {
 									updatedTodos.push(doc.data().todos[i]);
 									break;
 								}
 							}
 						});
+
 						this.setState({
 							...doc.data(),
 							todos: updatedTodos
@@ -183,7 +187,19 @@ class TodoListPage extends React.Component {
 			}
 		});
 
+		const updatedAllTodos = this.state.allTodos.forEach(todo => {
+			if (todo.id === updateTodo.id) {
+				return {
+					...todo,
+					text: text
+				};
+			} else {
+				return todo;
+			}
+		});
+
 		this.setState({
+			allTodos: updatedAllTodos,
 			todos: updatedTodos
 		});
 
@@ -192,7 +208,10 @@ class TodoListPage extends React.Component {
 
 	addTodo = todo => {
 		this.setState(state => ({
-			todos: [todo, ...state.todos]
+			allTodos: state.descending
+				? [todo, ...state.allTodos]
+				: [...state.allTodos, todo],
+			todos: state.descending ? [todo, ...state.todos] : [...state.todos, todo]
 		}));
 
 		this.updateDB();
@@ -205,6 +224,7 @@ class TodoListPage extends React.Component {
 
 			if (userID === contributorID || userID === adminID) {
 				this.setState(state => ({
+					allTodos: state.allTodos.filter(todo => todo.id !== id),
 					todos: state.todos.filter(todo => todo.id !== id)
 				}));
 
@@ -214,6 +234,7 @@ class TodoListPage extends React.Component {
 			}
 		} else {
 			this.setState(state => ({
+				allTodos: state.allTodos.filter(todo => todo.id !== id),
 				todos: state.todos.filter(todo => todo.id !== id)
 			}));
 		}
@@ -221,6 +242,7 @@ class TodoListPage extends React.Component {
 
 	deleteCompleteTodos = () => {
 		this.setState(state => ({
+			allTodos: state.allTodos.filter(todo => !todo.complete),
 			todos: state.todos.filter(todo => !todo.complete)
 		}));
 
@@ -229,6 +251,10 @@ class TodoListPage extends React.Component {
 
 	markAllComplete = () => {
 		this.setState(state => ({
+			allTodos: state.allTodos.map(todo => ({
+				...todo,
+				complete: true
+			})),
 			todos: state.todos.map(todo => ({
 				...todo,
 				complete: true
@@ -240,6 +266,10 @@ class TodoListPage extends React.Component {
 
 	setAllActive = () => {
 		this.setState(state => ({
+			allTodos: state.allTodos.map(todo => ({
+				...todo,
+				complete: false
+			})),
 			todos: state.todos.map(todo => ({
 				...todo,
 				complete: false
@@ -264,6 +294,12 @@ class TodoListPage extends React.Component {
 
 	toggleComplete = id => {
 		this.setState(state => ({
+			allTodos: state.allTodos.map(todo => {
+				if (todo.id === id) {
+					todo.complete = !todo.complete;
+				}
+				return todo;
+			}),
 			todos: state.todos.map(todo => {
 				if (todo.id === id) {
 					todo.complete = !todo.complete;
@@ -326,9 +362,10 @@ class TodoListPage extends React.Component {
 		}
 
 		try {
-			const { descending, listName, todoFilter } = this.state;
+			const { descending, listName, todoFilter, allTodos } = this.state;
 			const updatedAt = Date.now();
 			todoListRef.update({
+				allTodos,
 				descending,
 				listName,
 				todoFilter,
@@ -393,7 +430,6 @@ class TodoListPage extends React.Component {
 			}
 
 			if (event.currentTarget.id === `${this.state.todos.length}`) {
-				console.log('hello');
 				updateTodos.push(movedTodo);
 			} else {
 				updateTodos.splice(event.currentTarget.id, 0, movedTodo);
