@@ -33,7 +33,7 @@ class TodoListPage extends React.Component {
 			todoSearch: ''
 		};
 
-		this.unsubscribeFromList = null;
+		this.unsubscribeFromList = () => null;
 	}
 
 	dragSrcIndex = null;
@@ -109,6 +109,13 @@ class TodoListPage extends React.Component {
 				.collection('todoLists')
 				.doc(`${this.props.location.state.id}`)
 				.onSnapshot(doc => {
+					if (!this.state.todos.length) {
+						this.setState({
+							...doc.data()
+						});
+						return;
+					}
+
 					if (this.state.todos.length < doc.data().todos.length) {
 						let updatedTodos = this.state.descending
 							? [doc.data().todos[0], ...this.state.todos]
@@ -132,7 +139,7 @@ class TodoListPage extends React.Component {
 							...doc.data(),
 							todos: updatedTodos
 						});
-					} else {
+					} else if (this.state.todos.length === doc.data().todos.length) {
 						let currentTodos = this.state.todos;
 						let updatedTodos = [];
 
