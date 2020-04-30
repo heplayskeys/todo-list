@@ -36,7 +36,7 @@ const Header = ({ currentUser }) => {
 	const renderHome = () => {
 		currentUser
 			? history.push(`/user/${currentUser.userID}/todo-lists`)
-			: history.push('/todo-list');
+			: history.push('/');
 	};
 
 	return (
@@ -47,11 +47,7 @@ const Header = ({ currentUser }) => {
 			<div className='options'>
 				<Link
 					className='option'
-					to={
-						currentUser
-							? `/user/${currentUser.userID}/todo-lists`
-							: '/todo-list'
-					}
+					to={currentUser ? `/user/${currentUser.userID}/todo-lists` : '/'}
 				>
 					<Option>{currentUser ? 'TODO LISTS' : null}</Option>
 				</Link>

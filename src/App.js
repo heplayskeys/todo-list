@@ -52,13 +52,13 @@ class App extends React.Component {
 				<Switch>
 					<Route
 						exact
-						path='/todo-list/signin'
+						path='/signin'
 						render={() =>
 							this.props.currentUser ? (
 								auth.isSignInWithEmailLink(window.location.href) ? (
 									<Redirect
 										to={{
-											pathname: `/todo-list/user/${this.props.currentUser.userID}/profile`,
+											pathname: `/user/${this.props.currentUser.userID}/profile`,
 											state: {
 												passwordUpdateRequired: true
 											}
@@ -66,7 +66,7 @@ class App extends React.Component {
 									/>
 								) : (
 									<Redirect
-										to={`/todo-list/user/${this.props.currentUser.userID}/todo-lists`}
+										to={`/user/${this.props.currentUser.userID}/todo-lists`}
 									/>
 								)
 							) : (
@@ -74,29 +74,21 @@ class App extends React.Component {
 							)
 						}
 					/>
+					<Route exact path='/user/:userID/profile' component={Profile} />
+					<Route exact path='/user/:userID/todo-lists' component={UserLists} />
+					<Route exact path='/contact' component={Contact} />
 					<Route
 						exact
-						path='/todo-list/user/:userID/profile'
-						component={Profile}
-					/>
-					<Route
-						exact
-						path='/todo-list/user/:userID/todo-lists'
-						component={UserLists}
-					/>
-					<Route exact path='/todo-list/contact' component={Contact} />
-					<Route
-						exact
-						path='/todo-list/user/:userID/todo-lists/todo-list/:todoListID'
+						path='/user/:userID/todo-lists/todo-list/:todoListID'
 						component={TodoListPage}
 					/>
-					<Route exact path='/todo-list/signout' component={SignOut} />
+					<Route exact path='/signout' component={SignOut} />
 					<Route
 						exact
-						path='/todo-list/reset-password/:userEmail'
+						path='/reset-password/:userEmail'
 						component={ResetPassword}
 					/>
-					<Route path='/todo-list' component={TodoListPage} />
+					<Route path='/' component={TodoListPage} />
 					/>
 				</Switch>
 			</div>
