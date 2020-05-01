@@ -30,6 +30,7 @@ const Header = ({ currentUser }) => {
 		});
 
 		auth.signOut();
+		localStorage.clear();
 		history.push('/signout');
 	};
 

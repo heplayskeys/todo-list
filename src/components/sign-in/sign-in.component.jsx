@@ -76,12 +76,17 @@ class SignIn extends React.Component {
 
 		try {
 			await auth.signInWithEmailAndPassword(email, password);
-			this.setState({
-				email: '',
-				password: '',
-				showError: false,
-				loading: true
-			});
+			this.setState(
+				{
+					email: '',
+					password: '',
+					showError: false,
+					loading: true
+				},
+				() => {
+					localStorage.setItem('currentUser', email);
+				}
+			);
 		} catch (error) {
 			console.log(error);
 			this.setState({

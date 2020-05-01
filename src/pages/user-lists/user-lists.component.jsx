@@ -30,6 +30,15 @@ class UserLists extends React.Component {
 
 	componentDidMount() {
 		if (this.props.currentUser) {
+			if (
+				localStorage.getItem('currentUser') &&
+				this.props.currentUser.email !== localStorage.getItem('currentUser')
+			) {
+				localStorage.clear();
+			} else {
+				localStorage.setItem('currentUser', this.props.currentUser.email);
+			}
+
 			this.initialize();
 		} else {
 			this.setState({
@@ -272,15 +281,16 @@ class UserLists extends React.Component {
 	};
 
 	handleDelete = event => {
-		let parentEl = document.querySelector(`div[id="${event.target.id}"]`);
+		let id = event.target.id;
+		let parentEl = document.querySelector(`div[id="${id}"]`);
 		parentEl.classList.add('deleting');
 		event.target.classList.add('deleting');
 		try {
 			firestore
-				.doc(`todoLists/${event.target.id}`)
+				.doc(`todoLists/${id}`)
 				.delete()
 				.then(() => {
-					localStorage.removeItem(`${event.target.id}`);
+					localStorage.removeItem(`${id}`);
 					setTimeout(() => {
 						this.setState(
 							{

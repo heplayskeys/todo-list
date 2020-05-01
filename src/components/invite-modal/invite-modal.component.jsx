@@ -143,14 +143,10 @@ class InviteModal extends React.Component {
 						}
 					}
 
-					// setTimeout(() => {
-					// 	handleInvite(null);
-					// }, 5000);
 					return;
 				}
 			});
 		} catch (error) {
-			// handleInvite(null);
 			console.error('ERROR: Unable to invite user. Email not found.');
 		}
 	};
