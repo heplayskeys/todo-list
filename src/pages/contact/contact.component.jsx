@@ -1,19 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import LoadingSpinner from '../../components/loading-spinner/loading-spinner.component';
 
 import './contact.styles.scss';
 
 const Contact = () => {
+	const imagesLoaded = useRef(false);
+
 	const [state, setState] = useState({
 		isLoaded: false
 	});
 
+	const contactImages = {
+		nbernstein:
+			'http://drive.google.com/uc?export=view&id=1yIkygBaoW-YL6yN_47dV6WRW-NUQWQPQ',
+		sjohnson:
+			'http://drive.google.com/uc?export=view&id=1B4egLoQILOI_uLduHNlIcJ121BHPCy87',
+		jobryan:
+			'http://drive.google.com/uc?export=view&id=15l-sd33mipMC2je1_8_wAI0JT595DmSn'
+	};
+
 	useEffect(() => {
-		setTimeout(() => {
-			setState({ isLoaded: true });
-		}, 1000);
-	});
+		console.log(imagesLoaded);
+		if (state.isLoaded && !imagesLoaded.current) {
+			setTimeout(() => {
+				imagesLoaded.current = true;
+				setState({
+					isLoaded: true
+				});
+			});
+		} else {
+			setTimeout(() => {
+				setState({
+					isLoaded: true
+				});
+			}, 1000);
+		}
+	}, [state.isLoaded]);
 
 	return (
 		<div>
@@ -29,12 +52,15 @@ const Contact = () => {
 				</div>
 				<div className='contact-card-container'>
 					<div className='contact-card'>
-						<div className='contact-photo'>
+						<div
+							className='contact-photo'
+							style={{ opacity: imagesLoaded.current ? 1 : 0 }}
+						>
 							<div
 								id='nbernstein'
 								className='contact-image'
 								style={{
-									backgroundImage: `url('http://drive.google.com/uc?export=view&id=1yIkygBaoW-YL6yN_47dV6WRW-NUQWQPQ')`
+									backgroundImage: `url(${contactImages['nbernstein']})`
 								}}
 							></div>
 						</div>
@@ -45,12 +71,15 @@ const Contact = () => {
 					</div>
 
 					<div className='contact-card'>
-						<div className='contact-photo'>
+						<div
+							className='contact-photo'
+							style={{ opacity: imagesLoaded.current ? 1 : 0 }}
+						>
 							<div
 								id='sjohnson'
 								className='contact-image'
 								style={{
-									backgroundImage: `url('http://drive.google.com/uc?export=view&id=1B4egLoQILOI_uLduHNlIcJ121BHPCy87')`
+									backgroundImage: `url(${contactImages['sjohnson']})`
 								}}
 							></div>
 						</div>
@@ -60,12 +89,15 @@ const Contact = () => {
 						</div>
 					</div>
 					<div className='contact-card'>
-						<div className='contact-photo'>
+						<div
+							className='contact-photo'
+							style={{ opacity: imagesLoaded.current ? 1 : 0 }}
+						>
 							<div
 								id='jobryan'
 								className='contact-image'
 								style={{
-									backgroundImage: `url('http://drive.google.com/uc?export=view&id=15l-sd33mipMC2je1_8_wAI0JT595DmSn')`
+									backgroundImage: `url(${contactImages['jobryan']})`
 								}}
 							></div>
 						</div>

@@ -25,18 +25,6 @@
 		height: 275px;
 		width: 200px;
 
-		&:hover {
-			.contact-info h2 {
-				font-weight: bold;
-				cursor: default;
-			}
-
-			.contact-image {
-				transform: scale(1.1);
-				transition: transform 5s cubic-bezier(0.25, 0.45, 0.45, 0.95);
-			}
-		}
-
 		.contact-photo {
 			height: 175px;
 			width: 175px;
@@ -44,8 +32,15 @@
 			border-radius: 50%;
 			margin: 0 auto;
 			overflow: hidden;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			opacity: 0;
+			transition: 1s ease-out;
 
 			.contact-image {
+				opacity: 1;
+
 				&#sjohnson {
 					height: 175px;
 					width: 175px;
@@ -72,6 +67,18 @@
 		.contact-info {
 			text-align: center;
 			margin-top: 15px;
+		}
+
+		&:hover {
+			.contact-info h2 {
+				font-weight: bold;
+				cursor: default;
+			}
+
+			.contact-image {
+				transform: scale(1.1);
+				transition: transform 5s cubic-bezier(0.25, 0.45, 0.45, 0.95);
+			}
 		}
 	}
 }
