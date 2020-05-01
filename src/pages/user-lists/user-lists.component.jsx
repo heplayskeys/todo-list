@@ -280,6 +280,7 @@ class UserLists extends React.Component {
 				.doc(`todoLists/${event.target.id}`)
 				.delete()
 				.then(() => {
+					localStorage.removeItem(`${event.target.id}`);
 					setTimeout(() => {
 						this.setState(
 							{
