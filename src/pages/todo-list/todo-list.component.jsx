@@ -96,23 +96,18 @@ class TodoListPage extends React.Component {
 					}
 				);
 			}
+		}
 
-			if (
-				JSON.parse(
-					localStorage.getItem(`${this.props.match.params.todoListID}`)
-				).todoState.length !== this.state.todos.length
-			) {
-				localStorage.setItem(
-					`${this.props.match.params.todoListID}`,
-					JSON.stringify({
-						todoState: this.state.todos
-					})
-				);
-			}
+		if (this.state.toastType) {
+			setTimeout(() => {
+				this.setState({
+					toastType: null
+				});
+			}, 4500);
 		}
 	}
 
-	async componentWillUnmount() {
+	componentWillUnmount() {
 		if (!this.state.loggedIn || !this.props.currentUser) {
 			return;
 		}
@@ -202,8 +197,51 @@ class TodoListPage extends React.Component {
 	resortTodos = () => {
 		let previousSort = JSON.parse(
 			localStorage.getItem(`${this.props.match.params.todoListID}`)
+		).todoState;
+		let previousSortIDs = [];
+		let currentSort = this.state.todos;
+		let sortedTodos = [];
+
+		if (currentSort.length < previousSort.length) {
+			for (let i = 0; i < previousSort.length; i++) {
+				for (let j = 0; j < currentSort.length; j++) {
+					if (previousSort[i].id === currentSort[j].id) {
+						previousSort[i] = currentSort[j];
+						sortedTodos.push(previousSort[i]);
+						break;
+					}
+				}
+			}
+		} else {
+			for (let i = 0; i < previousSort.length; i++) {
+				previousSortIDs.push(previousSort[i].id);
+				for (let j = 0; j < currentSort.length; j++) {
+					if (previousSort[i].id === currentSort[j].id) {
+						previousSort[i] = currentSort[j];
+						break;
+					}
+				}
+			}
+
+			currentSort = currentSort.filter(
+				todo => !previousSortIDs.includes(todo.id)
+			);
+
+			if (this.state.descending) {
+				sortedTodos = [...currentSort, ...previousSort];
+			} else {
+				sortedTodos = [...previousSort, ...currentSort];
+			}
+		}
+
+		localStorage.setItem(
+			`${this.props.match.params.todoListID}`,
+			JSON.stringify({
+				todoState: sortedTodos
+			})
 		);
-		return previousSort.todoState;
+
+		return sortedTodos;
 	};
 
 	setTodo = (updateTodo, text) => {
@@ -487,7 +525,7 @@ class TodoListPage extends React.Component {
 					localStorage.setItem(
 						`${this.props.match.params.todoListID}`,
 						JSON.stringify({
-							todoState: this.state.todos
+							todoState: updateTodos
 						})
 					);
 				}

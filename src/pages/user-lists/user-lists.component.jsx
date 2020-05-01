@@ -289,10 +289,10 @@ class UserLists extends React.Component {
 							() => {
 								setTimeout(() => {
 									this.initialize();
-								}, 3000);
+								}, 1500);
 							}
 						);
-					}, 2500);
+					}, 1500);
 				});
 		} catch (error) {
 			this.setState({

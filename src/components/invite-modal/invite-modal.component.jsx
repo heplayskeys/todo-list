@@ -109,7 +109,6 @@ class InviteModal extends React.Component {
 						updateRef.doc(doc.id).update({
 							inviteIDs: { ...inviteData, ...doc.data().inviteIDs }
 						});
-						handleInvite('success');
 
 						try {
 							const currentUserRef = firestore.doc(`users/${id}`);
@@ -131,23 +130,27 @@ class InviteModal extends React.Component {
 									[userEmail]: updatedInviteData
 								};
 
-								currentUserRef.update({
-									invitesSent: updateData
-								});
+								currentUserRef
+									.update({
+										invitesSent: updateData
+									})
+									.then(() => {
+										handleInvite('success');
+									});
 							});
 						} catch (error) {
 							console.error('ERROR: Unable to update invites.');
 						}
 					}
 
-					setTimeout(() => {
-						handleInvite(null);
-					}, 5000);
+					// setTimeout(() => {
+					// 	handleInvite(null);
+					// }, 5000);
 					return;
 				}
 			});
 		} catch (error) {
-			handleInvite(null);
+			// handleInvite(null);
 			console.error('ERROR: Unable to invite user. Email not found.');
 		}
 	};
@@ -207,7 +210,7 @@ class InviteModal extends React.Component {
 							<button
 								type='button'
 								className='btn btn-light'
-								onClick={() => this.cancelBtn()}
+								onClick={this.cancelBtn}
 								data-dismiss='modal'
 							>
 								Cancel
@@ -215,7 +218,7 @@ class InviteModal extends React.Component {
 							<button
 								type='button'
 								className='btn btn-dark'
-								onClick={() => this.handleSubmit()}
+								onClick={this.handleSubmit}
 							>
 								Invite
 							</button>

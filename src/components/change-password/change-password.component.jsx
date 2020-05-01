@@ -35,6 +35,16 @@ class ChangePassword extends React.Component {
 		}
 	}
 
+	componentDidUpdate() {
+		if (this.state.toastType) {
+			setTimeout(() => {
+				this.setState({
+					toastType: null
+				});
+			}, 4500);
+		}
+	}
+
 	handleSubmit = async () => {
 		this.setState({
 			loading: true

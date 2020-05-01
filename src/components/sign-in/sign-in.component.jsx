@@ -55,6 +55,16 @@ class SignIn extends React.Component {
 		}
 	}
 
+	componentDidUpdate() {
+		if (this.state.toastType) {
+			setTimeout(() => {
+				this.setState({
+					toastType: null
+				});
+			}, 4500);
+		}
+	}
+
 	handleSubmit = async event => {
 		event.preventDefault();
 
