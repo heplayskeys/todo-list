@@ -310,6 +310,10 @@ class TodoListPage extends React.Component {
 	};
 
 	deleteCompleteTodos = () => {
+		if (this.props.currentUser.userID !== this.state.adminID) {
+			return;
+		}
+
 		this.setState(state => ({
 			allTodos: state.allTodos.filter(todo => !todo.complete),
 			todos: state.todos.filter(todo => !todo.complete)
@@ -559,7 +563,11 @@ class TodoListPage extends React.Component {
 
 		let todos = [];
 		let clearTodosBtn = this.state.todos.some(todo => todo.complete) ? (
-			<button className='dropdown-item' onClick={this.deleteCompleteTodos}>
+			<button
+				className='dropdown-item'
+				onClick={this.deleteCompleteTodos}
+				disabled={this.props.currentUser.userID !== this.state.adminID}
+			>
 				Clear Completed
 			</button>
 		) : (
