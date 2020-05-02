@@ -256,7 +256,7 @@ class TodoListPage extends React.Component {
 			}
 		});
 
-		const updatedAllTodos = this.state.allTodos.forEach(todo => {
+		const updatedAllTodos = this.state.allTodos.map(todo => {
 			if (todo.id === updateTodo.id) {
 				return {
 					...todo,
