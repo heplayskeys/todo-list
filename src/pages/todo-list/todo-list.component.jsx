@@ -372,22 +372,33 @@ class TodoListPage extends React.Component {
 	};
 
 	toggleComplete = id => {
-		this.setState(state => ({
-			allTodos: state.allTodos.map(todo => {
-				if (todo.id === id) {
-					todo.complete = !todo.complete;
-				}
-				return todo;
-			}),
-			todos: state.todos.map(todo => {
-				if (todo.id === id) {
-					todo.complete = !todo.complete;
-				}
-				return todo;
-			})
-		}));
+		if (this.props.currentUser) {
+			this.setState(state => ({
+				allTodos: state.allTodos.map(todo => {
+					if (todo.id === id) {
+						todo.complete = !todo.complete;
+					}
+					return todo;
+				}),
+				todos: state.todos.map(todo => {
+					if (todo.id === id) {
+						todo.complete = !todo.complete;
+					}
+					return todo;
+				})
+			}));
 
-		this.updateDB();
+			this.updateDB();
+		} else {
+			this.setState({
+				todos: this.state.todos.map(todo => {
+					if (todo.id === id) {
+						todo.complete = !todo.complete;
+					}
+					return todo;
+				})
+			});
+		}
 	};
 
 	handleInvite = toastMsg => {
@@ -566,7 +577,11 @@ class TodoListPage extends React.Component {
 			<button
 				className='dropdown-item'
 				onClick={this.deleteCompleteTodos}
-				disabled={this.props.currentUser.userID !== this.state.adminID}
+				disabled={
+					this.props.currentUser
+						? this.props.currentUser.userID !== this.state.adminID
+						: false
+				}
 			>
 				Clear Completed
 			</button>

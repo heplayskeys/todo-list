@@ -35,8 +35,7 @@ export const createUserProfileDocument = async (userAuth, additionalData) => {
 				todoListIDs: [],
 				inviteIDs: {},
 				invitesSent: {},
-				activeTodoList: null,
-				tempPassword: null
+				activeTodoList: null
 			});
 		} catch (error) {
 			console.log('Error creating user', error.message);

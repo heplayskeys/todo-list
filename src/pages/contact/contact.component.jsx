@@ -21,7 +21,6 @@ const Contact = () => {
 	};
 
 	useEffect(() => {
-		console.log(imagesLoaded);
 		if (state.isLoaded && !imagesLoaded.current) {
 			setTimeout(() => {
 				imagesLoaded.current = true;
