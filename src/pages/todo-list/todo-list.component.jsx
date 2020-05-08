@@ -310,16 +310,23 @@ class TodoListPage extends React.Component {
 	};
 
 	deleteCompleteTodos = () => {
-		if (this.props.currentUser.userID !== this.state.adminID) {
-			return;
+		if (this.props.currentUser) {
+			if (this.props.currentUser.userID !== this.state.adminID) {
+				return;
+			}
+
+			this.setState(state => ({
+				allTodos: state.allTodos.filter(todo => !todo.complete),
+				todos: state.todos.filter(todo => !todo.complete)
+			}));
+
+			this.updateDB(true);
+		} else {
+			this.setState(state => ({
+				allTodos: state.allTodos.filter(todo => !todo.complete),
+				todos: state.todos.filter(todo => !todo.complete)
+			}));
 		}
-
-		this.setState(state => ({
-			allTodos: state.allTodos.filter(todo => !todo.complete),
-			todos: state.todos.filter(todo => !todo.complete)
-		}));
-
-		this.updateDB(true);
 	};
 
 	markAllComplete = () => {
