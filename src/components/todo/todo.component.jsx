@@ -61,7 +61,7 @@ const Todo = props => {
 					/>
 					<label className='box-label' htmlFor='checkbox'></label>
 				</div>
-				{state.text.length > 65 ? <ReactTooltip place='top' /> : null}
+				{state.text.length > 70 ? <ReactTooltip place='top' /> : null}
 			</div>
 			<div
 				type='text'
