@@ -11,6 +11,9 @@
 	}
 
 	.todo-item {
+		overflow: hidden;
+		text-overflow: ellipsis;
+
 		&.edit-input {
 			background-color: #fff;
 		}

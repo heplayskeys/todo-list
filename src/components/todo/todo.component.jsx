@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
+import ReactTooltip from 'react-tooltip';
 
 import './todo.styles.scss';
 
@@ -48,7 +49,7 @@ const Todo = props => {
 	};
 
 	return (
-		<div id={index} className='todo-container input-group mb-3'>
+		<div id={index} className='todo-container input-group mb-3' data-tip={text}>
 			<div className='input-group-prepend'>
 				<div className='input-group-text'>
 					<input
@@ -60,6 +61,7 @@ const Todo = props => {
 					/>
 					<label className='box-label' htmlFor='checkbox'></label>
 				</div>
+				{state.text.length > 65 ? <ReactTooltip place='top' /> : null}
 			</div>
 			<div
 				type='text'
