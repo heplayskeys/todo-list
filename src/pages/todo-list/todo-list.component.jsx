@@ -680,7 +680,7 @@ class TodoListPage extends React.Component {
 			<div className='list-page-container'>
 				{this.props.currentUser ? (
 					<div className='contributor-count' data-tip='Currently Active Users'>
-						{this.state.activeContributors.length}
+						{this.state.contributorIDs.length}
 						<ReactTooltip place='left' />
 					</div>
 				) : null}
